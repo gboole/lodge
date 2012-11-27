@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<configdata>
+  <app>
+    <webhost>localhost</webhost>
+	<database>
+	  <host>127.0.0.1</host>
+	  <username>root</username>
+	  <password>laz110xx</password>
+	  <dbname>looup</dbname>
+	</database>
+  </app>
+</configdata>
