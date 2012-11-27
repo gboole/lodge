@@ -1,16 +1,31 @@
 <?php
 /**
- * Zend Framework (http://framework.zend.com/)
+ * Zend Framework
  *
- * @link      http://github.com/zendframework/zf2 for the canonical source repository
- * @copyright Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
- * @license   http://framework.zend.com/license/new-bsd New BSD License
- * @package   Zend_Mail
+ * LICENSE
+ *
+ * This source file is subject to the new BSD license that is bundled
+ * with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://framework.zend.com/license/new-bsd
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@zend.com so we can send you a copy immediately.
+ *
+ * @category   Zend
+ * @package    Zend_Mail
+ * @subpackage Protocol
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id: Login.php 24593 2012-01-05 20:35:02Z matthew $
  */
 
-namespace Zend\Mail\Protocol\Smtp\Auth;
 
-use Zend\Mail\Protocol\Smtp;
+/**
+ * @see Zend_Mail_Protocol_Smtp
+ */
+require_once 'Zend/Mail/Protocol/Smtp.php';
+
 
 /**
  * Performs LOGIN authentication
@@ -18,15 +33,17 @@ use Zend\Mail\Protocol\Smtp;
  * @category   Zend
  * @package    Zend_Mail
  * @subpackage Protocol
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
-class Login extends Smtp
+class Zend_Mail_Protocol_Smtp_Auth_Login extends Zend_Mail_Protocol_Smtp
 {
     /**
      * LOGIN username
      *
      * @var string
      */
-    protected $username;
+    protected $_username;
 
 
     /**
@@ -34,7 +51,7 @@ class Login extends Smtp
      *
      * @var string
      */
-    protected $password;
+    protected $_password;
 
 
     /**
@@ -43,37 +60,27 @@ class Login extends Smtp
      * @param  string $host   (Default: 127.0.0.1)
      * @param  int    $port   (Default: null)
      * @param  array  $config Auth-specific parameters
+     * @return void
      */
     public function __construct($host = '127.0.0.1', $port = null, $config = null)
     {
-        // Did we receive a configuration array?
-        $origConfig = $config;
-        if (is_array($host)) {
-            // Merge config array with principal array, if provided
-            if (is_array($config)) {
-                $config = array_replace_recursive($host, $config);
-            } else {
-                $config = $host;
-            }
-        }
-
         if (is_array($config)) {
             if (isset($config['username'])) {
-                $this->setUsername($config['username']);
+                $this->_username = $config['username'];
             }
             if (isset($config['password'])) {
-                $this->setPassword($config['password']);
+                $this->_password = $config['password'];
             }
         }
 
-        // Call parent with original arguments
-        parent::__construct($host, $port, $origConfig);
+        parent::__construct($host, $port, $config);
     }
 
 
     /**
      * Perform LOGIN authentication with supplied credentials
      *
+     * @return void
      */
     public function auth()
     {
@@ -82,54 +89,10 @@ class Login extends Smtp
 
         $this->_send('AUTH LOGIN');
         $this->_expect(334);
-        $this->_send(base64_encode($this->getUsername()));
+        $this->_send(base64_encode($this->_username));
         $this->_expect(334);
-        $this->_send(base64_encode($this->getPassword()));
+        $this->_send(base64_encode($this->_password));
         $this->_expect(235);
-        $this->auth = true;
-    }
-
-    /**
-     * Set value for username
-     *
-     * @param  string $username
-     * @return Login
-     */
-    public function setUsername($username)
-    {
-        $this->username = $username;
-        return $this;
-    }
-
-    /**
-     * Get username
-     *
-     * @return string
-     */
-    public function getUsername()
-    {
-        return $this->username;
-    }
-
-    /**
-     * Set value for password
-     *
-     * @param  string $password
-     * @return Login
-     */
-    public function setPassword($password)
-    {
-        $this->password = $password;
-        return $this;
-    }
-
-    /**
-     * Get password
-     *
-     * @return string
-     */
-    public function getPassword()
-    {
-        return $this->password;
+        $this->_auth = true;
     }
 }

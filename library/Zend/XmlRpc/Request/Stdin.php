@@ -1,17 +1,27 @@
 <?php
 /**
- * Zend Framework (http://framework.zend.com/)
+ * Zend Framework
  *
- * @link      http://github.com/zendframework/zf2 for the canonical source repository
- * @copyright Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
- * @license   http://framework.zend.com/license/new-bsd New BSD License
- * @package   Zend_XmlRpc
+ * LICENSE
+ *
+ * This source file is subject to the new BSD license that is bundled
+ * with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://framework.zend.com/license/new-bsd
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@zend.com so we can send you a copy immediately.
+ *
+ * @category   Zend
+ * @package    Zend_Controller
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 
-namespace Zend\XmlRpc\Request;
-
-use Zend\XmlRpc\Request as XmlRpcRequest;
-use Zend\XmlRpc\Server\Exception as ServerException;
+/**
+ * Zend_XmlRpc_Request
+ */
+require_once 'Zend/XmlRpc/Request.php';
 
 /**
  * XmlRpc Request object -- Request via STDIN
@@ -20,16 +30,19 @@ use Zend\XmlRpc\Server\Exception as ServerException;
  * built at construction time using data from STDIN; if no data is available, the
  * request is declared a fault.
  *
- * @category   Zend
- * @package    Zend_XmlRpc
+ * @category Zend
+ * @package  Zend_XmlRpc
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version $Id: Stdin.php 24593 2012-01-05 20:35:02Z matthew $
  */
-class Stdin extends XmlRpcRequest
+class Zend_XmlRpc_Request_Stdin extends Zend_XmlRpc_Request
 {
     /**
      * Raw XML as received via request
      * @var string
      */
-    protected $xml;
+    protected $_xml;
 
     /**
      * Constructor
@@ -38,12 +51,13 @@ class Stdin extends XmlRpcRequest
      * occurs in doing so, or if the XML is invalid, the request is declared a
      * fault.
      *
+     * @return void
      */
     public function __construct()
     {
         $fh = fopen('php://stdin', 'r');
         if (!$fh) {
-            $this->fault = new ServerException(630);
+            $this->_fault = new Zend_XmlRpc_Server_Exception(630);
             return;
         }
 
@@ -53,7 +67,7 @@ class Stdin extends XmlRpcRequest
         }
         fclose($fh);
 
-        $this->xml = $xml;
+        $this->_xml = $xml;
 
         $this->loadXml($xml);
     }
@@ -65,6 +79,6 @@ class Stdin extends XmlRpcRequest
      */
     public function getRawRequest()
     {
-        return $this->xml;
+        return $this->_xml;
     }
 }

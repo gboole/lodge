@@ -1,20 +1,30 @@
 <?php
 /**
- * Zend Framework (http://framework.zend.com/)
+ * Zend Framework
  *
- * @link      http://github.com/zendframework/zf2 for the canonical source repository
- * @copyright Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
- * @license   http://framework.zend.com/license/new-bsd New BSD License
- * @package   Zend_EventManager
+ * LICENSE
+ *
+ * This source file is subject to the new BSD license that is bundled
+ * with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://framework.zend.com/license/new-bsd
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@zend.com so we can send you a copy immediately.
+ *
+ * @category   Zend
+ * @package    Zend_EventManager
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 
-namespace Zend\EventManager;
-
-use ArrayAccess;
-use ArrayObject;
-use Traversable;
-use Zend\Stdlib\CallbackHandler;
-use Zend\Stdlib\PriorityQueue;
+require_once 'Zend/EventManager/Event.php';
+require_once 'Zend/EventManager/EventCollection.php';
+require_once 'Zend/EventManager/ResponseCollection.php';
+require_once 'Zend/EventManager/SharedEventCollectionAware.php';
+require_once 'Zend/EventManager/StaticEventManager.php';
+require_once 'Zend/Stdlib/CallbackHandler.php';
+require_once 'Zend/Stdlib/PriorityQueue.php';
 
 /**
  * Event manager: notification system
@@ -24,39 +34,42 @@ use Zend\Stdlib\PriorityQueue;
  *
  * @category   Zend
  * @package    Zend_EventManager
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
-class EventManager implements EventManagerInterface
+class Zend_EventManager_EventManager implements Zend_EventManager_EventCollection, Zend_EventManager_SharedEventCollectionAware
 {
     /**
      * Subscribed events and their listeners
-     * @var array Array of PriorityQueue objects
+     * @var array Array of Zend_Stdlib_PriorityQueue objects
      */
     protected $events = array();
 
     /**
      * @var string Class representing the event being emitted
      */
-    protected $eventClass = 'Zend\EventManager\Event';
+    protected $eventClass = 'Zend_EventManager_Event';
 
     /**
-     * Identifiers, used to pull shared signals from SharedEventManagerInterface instance
+     * Identifiers, used to pull static signals from StaticEventManager
      * @var array
      */
     protected $identifiers = array();
 
     /**
-     * Shared event manager
-     * @var false|null|SharedEventManagerInterface
+     * Static collections
+     * @var false|null|Zend_EventManager_StaticEventCollection
      */
-    protected $sharedManager = null;
+    protected $sharedCollections = null;
 
     /**
      * Constructor
      *
      * Allows optionally specifying identifier(s) to use to pull signals from a
-     * SharedEventManagerInterface.
+     * StaticEventManager.
      *
      * @param  null|string|int|array|Traversable $identifiers
+     * @return void
      */
     public function __construct($identifiers = null)
     {
@@ -67,7 +80,7 @@ class EventManager implements EventManagerInterface
      * Set the event class to utilize
      *
      * @param  string $class
-     * @return EventManager
+     * @return Zend_EventManager_EventManager
      */
     public function setEventClass($class)
     {
@@ -76,58 +89,45 @@ class EventManager implements EventManagerInterface
     }
 
     /**
-     * Set shared event manager
+     * Set static collections container
      *
-     * @param SharedEventManagerInterface $sharedEventManager
-     * @return EventManager
+     * @param  Zend_EventManager_StaticEventCollection $collections
+     * @return void
      */
-    public function setSharedManager(SharedEventManagerInterface $sharedEventManager)
+    public function setSharedCollections(Zend_EventManager_SharedEventCollection $collections)
     {
-        $this->sharedManager = $sharedEventManager;
-        StaticEventManager::setInstance($sharedEventManager);
+        $this->sharedCollections = $collections;
         return $this;
     }
 
     /**
-     * Remove any shared event manager currently attached
+     * Remove any shared collections
      *
+     * Sets {@link $sharedCollections} to boolean false to disable ability
+     * to lazy-load static event manager instance.
+     * 
      * @return void
      */
-    public function unsetSharedManager()
+    public function unsetSharedCollections()
     {
-        $this->sharedManager = false;
+        $this->sharedCollections = false;
     }
 
     /**
-     * Get shared event manager
+     * Get static collections container
      *
-     * If one is not defined, but we have a static instance in
-     * StaticEventManager, that one will be used and set in this instance.
-     *
-     * If none is available in the StaticEventManager, a boolean false is
-     * returned.
-     *
-     * @return false|SharedEventManagerInterface
+     * @return false|Zend_EventManager_SharedEventCollection
      */
-    public function getSharedManager()
+    public function getSharedCollections()
     {
-        // "false" means "I do not want a shared manager; don't try and fetch one"
-        if (false === $this->sharedManager
-            || $this->sharedManager instanceof SharedEventManagerInterface
-        ) {
-            return $this->sharedManager;
+        if (null === $this->sharedCollections) {
+            $this->setSharedCollections(Zend_EventManager_StaticEventManager::getInstance());
         }
-
-        if (!StaticEventManager::hasInstance()) {
-            return false;
-        }
-
-        $this->sharedManager = StaticEventManager::getInstance();
-        return $this->sharedManager;
+        return $this->sharedCollections;
     }
 
     /**
-     * Get the identifier(s) for this EventManager
+     * Get the identifier(s) for this Zend_EventManager_EventManager
      *
      * @return array
      */
@@ -140,11 +140,11 @@ class EventManager implements EventManagerInterface
      * Set the identifiers (overrides any currently set identifiers)
      *
      * @param string|int|array|Traversable $identifiers
-     * @return EventManager Provides a fluent interface
+     * @return Zend_EventManager_EventManager
      */
     public function setIdentifiers($identifiers)
     {
-        if (is_array($identifiers) || $identifiers instanceof \Traversable) {
+        if (is_array($identifiers) || $identifiers instanceof Traversable) {
             $this->identifiers = array_unique((array) $identifiers);
         } elseif ($identifiers !== null) {
             $this->identifiers = array($identifiers);
@@ -156,14 +156,14 @@ class EventManager implements EventManagerInterface
      * Add some identifier(s) (appends to any currently set identifiers)
      *
      * @param string|int|array|Traversable $identifiers
-     * @return EventManager Provides a fluent interface
+     * @return Zend_EventManager_EventManager
      */
     public function addIdentifiers($identifiers)
     {
-        if (is_array($identifiers) || $identifiers instanceof \Traversable) {
+        if (is_array($identifiers) || $identifiers instanceof Traversable) {
             $this->identifiers = array_unique($this->identifiers + (array) $identifiers);
         } elseif ($identifiers !== null) {
-            $this->identifiers = array_unique(array_merge($this->identifiers, array($identifiers)));
+            $this->identifiers = array_unique($this->identifiers + array($identifiers));
         }
         return $this;
     }
@@ -176,21 +176,20 @@ class EventManager implements EventManagerInterface
      * @param  string $event
      * @param  string|object $target Object calling emit, or symbol describing target (such as static method name)
      * @param  array|ArrayAccess $argv Array of arguments; typically, should be associative
-     * @param  null|callable $callback
-     * @return ResponseCollection All listener return values
-     * @throws Exception\InvalidCallbackException
+     * @param  null|callback $callback
+     * @return Zend_EventManager_ResponseCollection All listener return values
      */
     public function trigger($event, $target = null, $argv = array(), $callback = null)
     {
-        if ($event instanceof EventInterface) {
+        if ($event instanceof Zend_EventManager_EventDescription) {
             $e        = $event;
             $event    = $e->getName();
             $callback = $target;
-        } elseif ($target instanceof EventInterface) {
+        } elseif ($target instanceof Zend_EventManager_EventDescription) {
             $e = $target;
             $e->setName($event);
             $callback = $argv;
-        } elseif ($argv instanceof EventInterface) {
+        } elseif ($argv instanceof Zend_EventManager_EventDescription) {
             $e = $argv;
             $e->setName($event);
             $e->setTarget($target);
@@ -202,7 +201,8 @@ class EventManager implements EventManagerInterface
         }
 
         if ($callback && !is_callable($callback)) {
-            throw new Exception\InvalidCallbackException('Invalid callback provided');
+            require_once 'Zend/Stdlib/Exception/InvalidCallbackException.php';
+            throw new Zend_Stdlib_Exception_InvalidCallbackException('Invalid callback provided');
         }
 
         return $this->triggerListeners($event, $e, $callback);
@@ -218,21 +218,20 @@ class EventManager implements EventManagerInterface
      * @param  string $event
      * @param  string|object $target Object calling emit, or symbol describing target (such as static method name)
      * @param  array|ArrayAccess $argv Array of arguments; typically, should be associative
-     * @param  callable $callback
-     * @return ResponseCollection
-     * @throws Exception\InvalidCallbackException if invalid callable provided
+     * @param  Callable $callback
+     * @throws Zend_Stdlib_Exception_InvalidCallbackException if invalid callback provided
      */
     public function triggerUntil($event, $target, $argv = null, $callback = null)
     {
-        if ($event instanceof EventInterface) {
+        if ($event instanceof Zend_EventManager_EventDescription) {
             $e        = $event;
             $event    = $e->getName();
             $callback = $target;
-        } elseif ($target instanceof EventInterface) {
+        } elseif ($target instanceof Zend_EventManager_EventDescription) {
             $e = $target;
             $e->setName($event);
             $callback = $argv;
-        } elseif ($argv instanceof EventInterface) {
+        } elseif ($argv instanceof Zend_EventManager_EventDescription) {
             $e = $argv;
             $e->setName($event);
             $e->setTarget($target);
@@ -244,7 +243,8 @@ class EventManager implements EventManagerInterface
         }
 
         if (!is_callable($callback)) {
-            throw new Exception\InvalidCallbackException('Invalid callback provided');
+            require_once 'Zend/Stdlib/Exception/InvalidCallbackException.php';
+            throw new Zend_Stdlib_Exception_InvalidCallbackException('Invalid callback provided');
         }
 
         return $this->triggerListeners($event, $e, $callback);
@@ -261,25 +261,25 @@ class EventManager implements EventManagerInterface
      * executed. By default, this value is 1; however, you may set it for any
      * integer value. Higher values have higher priority (i.e., execute first).
      *
-     * You can specify "*" for the event name. In such cases, the listener will
+     * You can specify "*" for the event name. In such cases, the listener will 
      * be triggered for every event.
      *
-     * @param  string|array|ListenerAggregateInterface $event An event or array of event names. If a ListenerAggregateInterface, proxies to {@link attachAggregate()}.
-     * @param  callable|int $callback If string $event provided, expects PHP callback; for a ListenerAggregateInterface $event, this will be the priority
-     * @param  int $priority If provided, the priority at which to register the callable
-     * @return CallbackHandler|mixed CallbackHandler if attaching callable (to allow later unsubscribe); mixed if attaching aggregate
-     * @throws Exception\InvalidArgumentException
+     * @param  string|array|Zend_EventManager_ListenerAggregate $event An event or array of event names. If a ListenerAggregate, proxies to {@link attachAggregate()}.
+     * @param  callback|int $callback If string $event provided, expects PHP callback; for a ListenerAggregate $event, this will be the priority
+     * @param  int $priority If provided, the priority at which to register the callback
+     * @return Zend_Stdlib_CallbackHandler|mixed CallbackHandler if attaching callback (to allow later unsubscribe); mixed if attaching aggregate
      */
     public function attach($event, $callback = null, $priority = 1)
     {
-        // Proxy ListenerAggregateInterface arguments to attachAggregate()
-        if ($event instanceof ListenerAggregateInterface) {
+        // Proxy ListenerAggregate arguments to attachAggregate()
+        if ($event instanceof Zend_EventManager_ListenerAggregate) {
             return $this->attachAggregate($event, $callback);
         }
 
         // Null callback is invalid
         if (null === $callback) {
-            throw new Exception\InvalidArgumentException(sprintf(
+            require_once 'Zend/EventManager/Exception/InvalidArgumentException.php';
+            throw new Zend_EventManager_Exception_InvalidArgumentException(sprintf(
                 '%s: expects a callback; none provided',
                 __METHOD__
             ));
@@ -296,11 +296,11 @@ class EventManager implements EventManagerInterface
 
         // If we don't have a priority queue for the event yet, create one
         if (empty($this->events[$event])) {
-            $this->events[$event] = new PriorityQueue();
+            $this->events[$event] = new Zend_Stdlib_PriorityQueue();
         }
 
         // Create a callback handler, setting the event and priority in its metadata
-        $listener = new CallbackHandler($callback, array('event' => $event, 'priority' => $priority));
+        $listener = new Zend_Stdlib_CallbackHandler($callback, array('event' => $event, 'priority' => $priority));
 
         // Inject the callback handler into the queue
         $this->events[$event]->insert($listener, $priority);
@@ -310,15 +310,15 @@ class EventManager implements EventManagerInterface
     /**
      * Attach a listener aggregate
      *
-     * Listener aggregates accept an EventManagerInterface instance, and call attach()
+     * Listener aggregates accept an EventCollection instance, and call attach()
      * one or more times, typically to attach to multiple events using local
      * methods.
      *
-     * @param  ListenerAggregateInterface $aggregate
+     * @param  Zend_EventManager_ListenerAggregate $aggregate
      * @param  int $priority If provided, a suggested priority for the aggregate to use
-     * @return mixed return value of {@link ListenerAggregateInterface::attach()}
+     * @return mixed return value of {@link Zend_EventManager_ListenerAggregate::attach()}
      */
-    public function attachAggregate(ListenerAggregateInterface $aggregate, $priority = 1)
+    public function attachAggregate(Zend_EventManager_ListenerAggregate $aggregate, $priority = 1)
     {
         return $aggregate->attach($this, $priority);
     }
@@ -326,19 +326,20 @@ class EventManager implements EventManagerInterface
     /**
      * Unsubscribe a listener from an event
      *
-     * @param  CallbackHandler|ListenerAggregateInterface $listener
+     * @param  Zend_Stdlib_CallbackHandler|Zend_EventManager_ListenerAggregate $listener
      * @return bool Returns true if event and listener found, and unsubscribed; returns false if either event or listener not found
-     * @throws Exception\InvalidArgumentException if invalid listener provided
+     * @throws Zend_EventManager_Exception_InvalidArgumentException if invalid listener provided
      */
     public function detach($listener)
     {
-        if ($listener instanceof ListenerAggregateInterface) {
+        if ($listener instanceof Zend_EventManager_ListenerAggregate) {
             return $this->detachAggregate($listener);
         }
 
-        if (!$listener instanceof CallbackHandler) {
-            throw new Exception\InvalidArgumentException(sprintf(
-                '%s: expected a ListenerAggregateInterface or CallbackHandler; received "%s"',
+        if (!$listener instanceof Zend_Stdlib_CallbackHandler) {
+            require_once 'Zend/EventManager/Exception/InvalidArgumentException.php';
+            throw new Zend_EventManager_Exception_InvalidArgumentException(sprintf(
+                '%s: expected a Zend_EventManager_ListenerAggregate or Zend_Stdlib_CallbackHandler; received "%s"',
                 __METHOD__,
                 (is_object($listener) ? get_class($listener) : gettype($listener))
             ));
@@ -361,13 +362,13 @@ class EventManager implements EventManagerInterface
     /**
      * Detach a listener aggregate
      *
-     * Listener aggregates accept an EventManagerInterface instance, and call detach()
+     * Listener aggregates accept an EventCollection instance, and call detach()
      * of all previously attached listeners.
      *
-     * @param  ListenerAggregateInterface $aggregate
-     * @return mixed return value of {@link ListenerAggregateInterface::detach()}
+     * @param  Zend_EventManager_ListenerAggregate $aggregate
+     * @return mixed return value of {@link Zend_EventManager_ListenerAggregate::detach()}
      */
-    public function detachAggregate(ListenerAggregateInterface $aggregate)
+    public function detachAggregate(Zend_EventManager_ListenerAggregate $aggregate)
     {
         return $aggregate->detach($this);
     }
@@ -386,12 +387,12 @@ class EventManager implements EventManagerInterface
      * Retrieve all listeners for a given event
      *
      * @param  string $event
-     * @return PriorityQueue
+     * @return Zend_Stdlib_PriorityQueue
      */
     public function getListeners($event)
     {
         if (!array_key_exists($event, $this->events)) {
-            return new PriorityQueue();
+            return new Zend_Stdlib_PriorityQueue();
         }
         return $this->events[$event];
     }
@@ -431,13 +432,13 @@ class EventManager implements EventManagerInterface
      * delegate.
      *
      * @param  string           $event Event name
-     * @param  EventInterface $e
-     * @param  null|callable    $callback
+     * @param  EventDescription $e
+     * @param  null|callback    $callback
      * @return ResponseCollection
      */
-    protected function triggerListeners($event, EventInterface $e, $callback = null)
+    protected function triggerListeners($event, Zend_EventManager_EventDescription $e, $callback = null)
     {
-        $responses = new ResponseCollection;
+        $responses = new Zend_EventManager_ResponseCollection;
         $listeners = $this->getListeners($event);
 
         // Add shared/wildcard listeners to the list of listeners,
@@ -485,7 +486,7 @@ class EventManager implements EventManagerInterface
     }
 
     /**
-     * Get list of all listeners attached to the shared event manager for
+     * Get list of all listeners attached to the shared collection for
      * identifiers registered by this instance
      *
      * @param  string $event
@@ -493,19 +494,15 @@ class EventManager implements EventManagerInterface
      */
     protected function getSharedListeners($event)
     {
-        if (!$sharedManager = $this->getSharedManager()) {
+        if (!$sharedCollections = $this->getSharedCollections()) {
             return array();
         }
 
         $identifiers     = $this->getIdentifiers();
-        //Add wildcard id to the search, if not already added
-        if (!in_array('*', $identifiers)) {
-            $identifiers[] = '*';
-        }
         $sharedListeners = array();
 
         foreach ($identifiers as $id) {
-            if (!$listeners = $sharedManager->getListeners($id, $event)) {
+            if (!$listeners = $sharedCollections->getListeners($id, $event)) {
                 continue;
             }
 
@@ -514,7 +511,7 @@ class EventManager implements EventManagerInterface
             }
 
             foreach ($listeners as $listener) {
-                if (!$listener instanceof CallbackHandler) {
+                if (!$listener instanceof Zend_Stdlib_CallbackHandler) {
                     continue;
                 }
                 $sharedListeners[] = $listener;
@@ -528,9 +525,9 @@ class EventManager implements EventManagerInterface
      * Add listeners to the master queue of listeners
      *
      * Used to inject shared listeners and wildcard listeners.
-     *
-     * @param  PriorityQueue $masterListeners
-     * @param  PriorityQueue $listeners
+     * 
+     * @param  Zend_Stdlib_PriorityQueue $masterListeners 
+     * @param  Zend_Stdlib_PriorityQueue $listeners 
      * @return void
      */
     protected function insertListeners($masterListeners, $listeners)

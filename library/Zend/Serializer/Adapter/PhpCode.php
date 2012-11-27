@@ -1,32 +1,45 @@
 <?php
 /**
- * Zend Framework (http://framework.zend.com/)
+ * Zend Framework
  *
- * @link      http://github.com/zendframework/zf2 for the canonical source repository
- * @copyright Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
- * @license   http://framework.zend.com/license/new-bsd New BSD License
- * @package   Zend_Serializer
+ * LICENSE
+ *
+ * This source file is subject to the new BSD license that is bundled
+ * with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://framework.zend.com/license/new-bsd
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@zend.com so we can send you a copy immediately.
+ *
+ * @category   Zend
+ * @package    Zend_Serializer
+ * @subpackage Adapter
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id: PhpCode.php 24593 2012-01-05 20:35:02Z matthew $
  */
 
-namespace Zend\Serializer\Adapter;
-
-use Zend\Serializer\Exception;
-use Zend\Stdlib\ErrorHandler;
+/** @see Zend_Serializer_Adapter_AdapterAbstract */
+require_once 'Zend/Serializer/Adapter/AdapterAbstract.php';
 
 /**
  * @category   Zend
  * @package    Zend_Serializer
  * @subpackage Adapter
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
-class PhpCode extends AbstractAdapter
+class Zend_Serializer_Adapter_PhpCode extends Zend_Serializer_Adapter_AdapterAbstract
 {
     /**
      * Serialize PHP using var_export
      *
      * @param  mixed $value
+     * @param  array $opts
      * @return string
      */
-    public function serialize($value)
+    public function serialize($value, array $opts = array())
     {
         return var_export($value, true);
     }
@@ -37,31 +50,18 @@ class PhpCode extends AbstractAdapter
      * Warning: this uses eval(), and should likely be avoided.
      *
      * @param  string $code
+     * @param  array $opts
      * @return mixed
-     * @throws Exception\RuntimeException on eval error
+     * @throws Zend_Serializer_Exception on eval error
      */
-    public function unserialize($code)
+    public function unserialize($code, array $opts = array())
     {
-        ErrorHandler::start(E_ALL);
-        $ret  = null;
-        // This suppression is due to the fact that the ErrorHandler cannot
-        // catch syntax errors, and is intentionally left in place.
         $eval = @eval('$ret=' . $code . ';');
-        $err  = ErrorHandler::stop();
-
-        if ($eval === false || $err) {
-
-            $msg = 'eval failed';
-
-            // Error handler doesn't catch syntax errors
-            if ($eval === false) {
+        if ($eval === false) {
                 $lastErr = error_get_last();
-                $msg    .= ': ' . $lastErr['message'];
-            }
-
-            throw new Exception\RuntimeException($msg, 0, $err);
+                require_once 'Zend/Serializer/Exception.php';
+                throw new Zend_Serializer_Exception('eval failed: ' . $lastErr['message']);
         }
-
         return $ret;
     }
 }

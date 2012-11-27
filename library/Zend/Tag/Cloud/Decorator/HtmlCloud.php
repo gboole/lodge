@@ -1,30 +1,53 @@
 <?php
 /**
- * Zend Framework (http://framework.zend.com/)
+ * Zend Framework
  *
- * @link      http://github.com/zendframework/zf2 for the canonical source repository
- * @copyright Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
- * @license   http://framework.zend.com/license/new-bsd New BSD License
- * @package   Zend_Tag
+ * LICENSE
+ *
+ * This source file is subject to the new BSD license that is bundled
+ * with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://framework.zend.com/license/new-bsd
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@zend.com so we can send you a copy immediately.
+ *
+ * @category   Zend
+ * @package    Zend_Tag
+ * @subpackage Cloud
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id: HtmlCloud.php 24593 2012-01-05 20:35:02Z matthew $
  */
 
-namespace Zend\Tag\Cloud\Decorator;
+/**
+ * @see Zend_Tag_Cloud_Decorator_Cloud
+ */
+require_once 'Zend/Tag/Cloud/Decorator/Cloud.php';
 
 /**
  * Simple HTML decorator for clouds
  *
  * @category  Zend
  * @package   Zend_Tag
+ * @uses      Zend_Tag_Cloud_Decorator_Cloud
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license   http://framework.zend.com/license/new-bsd     New BSD License
  */
-class HtmlCloud extends AbstractCloud
+class Zend_Tag_Cloud_Decorator_HtmlCloud extends Zend_Tag_Cloud_Decorator_Cloud
 {
+    /**
+     * @var string Encoding to use
+     */
+    protected $_encoding = 'UTF-8';
+
     /**
      * List of HTML tags
      *
      * @var array
      */
-    protected $htmlTags = array(
-        'ul' => array('class' => 'Zend\Tag\Cloud')
+    protected $_htmlTags = array(
+        'ul' => array('class' => 'Zend_Tag_Cloud')
     );
 
     /**
@@ -32,17 +55,39 @@ class HtmlCloud extends AbstractCloud
      *
      * @var string
      */
-    protected $separator = ' ';
+    protected $_separator = ' ';
+
+    /**
+     * Get encoding
+     *
+     * @return string
+     */
+    public function getEncoding()
+    {
+        return $this->_encoding;
+    }
+
+    /**
+     * Set encoding
+     *
+     * @param string
+     * @return Zend_Tag_Cloud_Decorator_HtmlCloud
+     */
+    public function setEncoding($value)
+    {
+        $this->_encoding = (string) $value;
+        return $this;
+    }
 
     /**
      * Set the HTML tags surrounding all tags
      *
      * @param  array $htmlTags
-     * @return HTMLCloud
+     * @return Zend_Tag_Cloud_Decorator_HtmlCloud
      */
-    public function setHTMLTags(array $htmlTags)
+    public function setHtmlTags(array $htmlTags)
     {
-        $this->htmlTags = $htmlTags;
+        $this->_htmlTags = $htmlTags;
         return $this;
     }
 
@@ -51,20 +96,20 @@ class HtmlCloud extends AbstractCloud
      *
      * @return array
      */
-    public function getHTMLTags()
+    public function getHtmlTags()
     {
-        return $this->htmlTags;
+        return $this->_htmlTags;
     }
 
     /**
      * Set the separator between the single tags
      *
      * @param  string
-     * @return HTMLCloud
+     * @return Zend_Tag_Cloud_Decorator_HtmlCloud
      */
     public function setSeparator($separator)
     {
-        $this->separator = $separator;
+        $this->_separator = $separator;
         return $this;
     }
 
@@ -75,26 +120,36 @@ class HtmlCloud extends AbstractCloud
      */
     public function getSeparator()
     {
-        return $this->separator;
+        return $this->_separator;
     }
 
     /**
-     * Defined by Zend\Tag\Cloud\Decorator\Cloud
+     * Defined by Zend_Tag_Cloud_Decorator_Cloud
      *
      * @param  array $tags
-     * @throws Exception\InvalidArgumentException
      * @return string
      */
-    public function render($tags)
+    public function render(array $tags)
     {
-        if (!is_array($tags)) {
-            throw new Exception\InvalidArgumentException(sprintf(
-                'HtmlCloud::render() expects an array argument; received "%s"',
-                (is_object($tags) ? get_class($tags) : gettype($tags))
-            ));
+        $cloudHtml = implode($this->getSeparator(), $tags);
+
+        $enc = $this->getEncoding();
+        foreach ($this->getHtmlTags() as $key => $data) {
+            if (is_array($data)) {
+                $htmlTag    = $key;
+                $attributes = '';
+
+                foreach ($data as $param => $value) {
+                    $attributes .= ' ' . $param . '="' . htmlspecialchars($value, ENT_COMPAT, $enc) . '"';
+                }
+            } else {
+                $htmlTag    = $data;
+                $attributes = '';
+            }
+
+            $cloudHtml = sprintf('<%1$s%3$s>%2$s</%1$s>', $htmlTag, $cloudHtml, $attributes);
         }
-        $cloudHTML = implode($this->getSeparator(), $tags);
-        $cloudHTML = $this->wrapTag($cloudHTML);
-        return $cloudHTML;
+
+        return $cloudHtml;
     }
 }

@@ -1,219 +1,144 @@
 <?php
 /**
- * Zend Framework (http://framework.zend.com/)
+ * Zend Framework
  *
- * @link      http://github.com/zendframework/zf2 for the canonical source repository
- * @copyright Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
- * @license   http://framework.zend.com/license/new-bsd New BSD License
- * @package   Zend_Soap
+ * LICENSE
+ *
+ * This source file is subject to the new BSD license that is bundled
+ * with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://framework.zend.com/license/new-bsd
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@zend.com so we can send you a copy immediately.
+ *
+ * @category   Zend
+ * @package    Zend_Soap
+ * @subpackage AutoDiscover
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id: AutoDiscover.php 24842 2012-05-31 18:31:28Z rob $
  */
 
-namespace Zend\Soap;
-
-use Zend\Server\Reflection;
-use Zend\Server\Reflection\AbstractFunction;
-use Zend\Server\Reflection\Prototype;
-use Zend\Soap\AutoDiscover\DiscoveryStrategy\DiscoveryStrategyInterface as DiscoveryStrategy;
-use Zend\Soap\AutoDiscover\DiscoveryStrategy\ReflectionDiscovery;
-use Zend\Soap\Wsdl;
-use Zend\Soap\Wsdl\ComplexTypeStrategy\ComplexTypeStrategyInterface as ComplexTypeStrategy;
-use Zend\Uri;
+/**
+ * @see Zend_Server_Interface
+ */
+require_once 'Zend/Server/Interface.php';
+/**
+ * @see Zend_Soap_Wsdl
+ */
+require_once 'Zend/Soap/Wsdl.php';
+/**
+ * @see Zend_Server_Reflection
+ */
+require_once 'Zend/Server/Reflection.php';
+/**
+ * @see Zend_Server_Abstract
+ */
+require_once 'Zend/Server/Abstract.php';
+/**
+ * @see Zend_Uri
+ */
+require_once 'Zend/Uri.php';
 
 /**
- * \Zend\Soap\AutoDiscover
+ * Zend_Soap_AutoDiscover
  *
  * @category   Zend
  * @package    Zend_Soap
  * @subpackage AutoDiscover
  */
-class AutoDiscover
+class Zend_Soap_AutoDiscover implements Zend_Server_Interface
 {
     /**
-     * @var string
+     * @var Zend_Soap_Wsdl
      */
-    protected $serviceName;
+    protected $_wsdl = null;
 
     /**
-     * @var \Zend\Server\Reflection
+     * @var Zend_Server_Reflection
      */
-    protected $reflection = null;
+    protected $_reflection = null;
 
     /**
-     * Service function names
-     *
      * @var array
      */
-    protected $functions = array();
-
-    /**
-     * Service class name
-     *
-     * @var string
-     */
-    protected $class;
+    protected $_functions = array();
 
     /**
      * @var boolean
      */
-    protected $strategy;
+    protected $_strategy;
 
     /**
      * Url where the WSDL file will be available at.
      *
      * @var WSDL Uri
      */
-    protected $uri;
+    protected $_uri;
 
     /**
      * soap:body operation style options
      *
      * @var array
      */
-    protected $operationBodyStyle = array('use' => 'encoded', 'encodingStyle' => "http://schemas.xmlsoap.org/soap/encoding/");
+    protected $_operationBodyStyle = array('use' => 'encoded', 'encodingStyle' => "http://schemas.xmlsoap.org/soap/encoding/");
 
     /**
      * soap:operation style
      *
      * @var array
      */
-    protected $bindingStyle = array('style' => 'rpc', 'transport' => 'http://schemas.xmlsoap.org/soap/http');
+    protected $_bindingStyle = array('style' => 'rpc', 'transport' => 'http://schemas.xmlsoap.org/soap/http');
 
     /**
      * Name of the class to handle the WSDL creation.
      *
      * @var string
      */
-    protected $wsdlClass = 'Zend\Soap\Wsdl';
-
-    /**
-     * Class Map of PHP to WSDL types.
-     *
-     * @var array
-     */
-    protected $classMap = array();
-
-    /**
-     * Discovery strategy for types and other method details.
-     *
-     * @var DiscoveryStrategy
-     */
-    protected $discoveryStrategy;
+    protected $_wsdlClass = 'Zend_Soap_Wsdl';
 
     /**
      * Constructor
      *
-     * @param ComplexTypeStrategy $strategy
-     * @param string|Uri\Uri $endpointUri
+     * @param boolean|string|Zend_Soap_Wsdl_Strategy_Interface $strategy
+     * @param string|Zend_Uri $uri
      * @param string $wsdlClass
-     * @param array $classMap
      */
-    public function __construct(ComplexTypeStrategy $strategy = null, $endpointUri=null, $wsdlClass=null, array $classMap = array())
+    public function __construct($strategy = true, $uri=null, $wsdlClass=null)
     {
-        $this->reflection = new Reflection();
-        $this->discoveryStrategy = new ReflectionDiscovery();
+        $this->_reflection = new Zend_Server_Reflection();
+        $this->setComplexTypeStrategy($strategy);
 
-        if ($strategy !== null) {
-            $this->setComplexTypeStrategy($strategy);
+        if($uri !== null) {
+            $this->setUri($uri);
         }
 
-        if ($endpointUri !== null) {
-            $this->setUri($endpointUri);
-        }
-
-        if ($wsdlClass !== null) {
+        if($wsdlClass !== null) {
             $this->setWsdlClass($wsdlClass);
         }
     }
 
     /**
-     * Set the discovery strategy for method type and other information.
-     *
-     * @param  DiscoveryStrategy $discoveryStrategy
-     * @return AutoDiscover
-     */
-    public function setDiscoveryStrategy(DiscoveryStrategy $discoveryStrategy)
-    {
-        $this->discoveryStrategy = $discoveryStrategy;
-        return $this;
-    }
-
-    /**
-     * @return DiscoveryStrategy
-     */
-    public function getDiscoveryStrategy()
-    {
-        return $this->discoveryStrategy;
-    }
-
-    /**
-     * Get the class map of php to wsdl qname types.
-     *
-     * @return array
-     */
-    public function getClassMap()
-    {
-        return $this->classMap;
-    }
-
-    /**
-     * Set the class map of php to wsdl qname types.
-     */
-    public function setClassMap($classMap)
-    {
-        $this->classMap = $classMap;
-        return $this;
-    }
-
-    /**
-     * Set service name
-     *
-     * @param string $serviceName
-     * @return AutoDiscover
-     */
-    public function setServiceName($serviceName)
-    {
-        $this->serviceName = $serviceName;
-        return $this;
-    }
-
-    /**
-     * Get service name
-     *
-     * @return string
-     * @throws Exception\RuntimeException
-     */
-    public function getServiceName()
-    {
-        if (!$this->serviceName) {
-            if ($this->class) {
-                return $this->reflection->reflectClass($this->class)
-                                         ->getShortName();
-            } else {
-                throw new Exception\RuntimeException(
-                    "No service name given. Call Autodiscover::setServiceName()."
-                );
-            }
-        }
-
-        return $this->serviceName;
-    }
-
-
-    /**
      * Set the location at which the WSDL file will be availabe.
      *
-     * @param  Uri\Uri|string $uri
-     * @return AutoDiscover
-     * @throws Exception\InvalidArgumentException
+     * @see Zend_Soap_Exception
+     * @param  Zend_Uri|string $uri
+     * @return Zend_Soap_AutoDiscover
+     * @throws Zend_Soap_AutoDiscover_Exception
      */
     public function setUri($uri)
     {
-        if (!is_string($uri) && !($uri instanceof Uri\Uri)) {
-            throw new Exception\InvalidArgumentException(
-                'No uri given to \Zend\Soap\AutoDiscover::setUri as string or \Zend\Uri\Uri instance.'
-            );
+        if (!is_string($uri) && !($uri instanceof Zend_Uri)) {
+            require_once "Zend/Soap/AutoDiscover/Exception.php";
+            throw new Zend_Soap_AutoDiscover_Exception("No uri given to Zend_Soap_AutoDiscover::setUri as string or Zend_Uri instance.");
         }
-        $this->uri = $uri;
+        $this->_uri = $uri;
+
+        // change uri in WSDL file also if existant
+        if ($this->_wsdl instanceof Zend_Soap_Wsdl) {
+            $this->_wsdl->setUri($uri);
+        }
 
         return $this;
     }
@@ -221,36 +146,38 @@ class AutoDiscover
     /**
      * Return the current Uri that the SOAP WSDL Service will be located at.
      *
-     * @return Uri\Uri
-     * @throws Exception\RuntimeException
+     * @return Zend_Uri
      */
     public function getUri()
     {
-        if ($this->uri === null) {
-            throw new Exception\RuntimeException("Missing uri. You have to explicitly configure the Endpoint Uri by calling AutoDiscover::setUri().");
+        if($this->_uri !== null) {
+            $uri = $this->_uri;
+        } else {
+            $schema     = $this->getSchema();
+            $host       = $this->getHostName();
+            $scriptName = $this->getRequestUriWithoutParameters();
+            $uri = Zend_Uri::factory($schema . '://' . $host . $scriptName);
+            $this->setUri($uri);
         }
-        if (is_string($this->uri)) {
-            $this->uri = Uri\UriFactory::factory($this->uri);
-        }
-
-        return $this->uri;
+        return $uri;
     }
 
     /**
      * Set the name of the WSDL handling class.
      *
+     * @see Zend_Soap_Exception
+     * @see Zend_Soap_Exception
      * @param  string $wsdlClass
-     * @return AutoDiscover
-     * @throws Exception\InvalidArgumentException
+     * @return Zend_Soap_AutoDiscover
+     * @throws Zend_Soap_AutoDiscover_Exception
      */
     public function setWsdlClass($wsdlClass)
     {
-        if (!is_string($wsdlClass) && !is_subclass_of($wsdlClass, 'Zend\Soap\Wsdl')) {
-            throw new Exception\InvalidArgumentException(
-                'No \Zend\Soap\Wsdl subclass given to Zend\Soap\AutoDiscover::setWsdlClass as string.'
-            );
+        if (!is_string($wsdlClass) && !is_subclass_of($wsdlClass, 'Zend_Soap_Wsdl')) {
+            require_once "Zend/Soap/AutoDiscover/Exception.php";
+            throw new Zend_Soap_AutoDiscover_Exception("No Zend_Soap_Wsdl subclass given to Zend_Soap_AutoDiscover::setWsdlClass as string.");
         }
-        $this->wsdlClass = $wsdlClass;
+        $this->_wsdlClass = $wsdlClass;
 
         return $this;
     }
@@ -262,7 +189,7 @@ class AutoDiscover
      */
     public function getWsdlClass()
     {
-        return $this->wsdlClass;
+        return $this->_wsdlClass;
     }
 
     /**
@@ -271,16 +198,18 @@ class AutoDiscover
      * By default the options are set to 'use' => 'encoded' and
      * 'encodingStyle' => "http://schemas.xmlsoap.org/soap/encoding/".
      *
+     * @see    Zend_Soap_AutoDiscover_Exception
      * @param  array $operationStyle
-     * @return AutoDiscover
-     * @throws Exception\InvalidArgumentException
+     * @return Zend_Soap_AutoDiscover
+     * @throws Zend_Soap_AutoDiscover_Exception
      */
     public function setOperationBodyStyle(array $operationStyle=array())
     {
-        if (!isset($operationStyle['use'])) {
-            throw new Exception\InvalidArgumentException("Key 'use' is required in Operation soap:body style.");
+        if(!isset($operationStyle['use'])) {
+            require_once "Zend/Soap/AutoDiscover/Exception.php";
+            throw new Zend_Soap_AutoDiscover_Exception("Key 'use' is required in Operation soap:body style.");
         }
-        $this->operationBodyStyle = $operationStyle;
+        $this->_operationBodyStyle = $operationStyle;
         return $this;
     }
 
@@ -290,28 +219,85 @@ class AutoDiscover
      * By default 'style' is 'rpc' and 'transport' is 'http://schemas.xmlsoap.org/soap/http'.
      *
      * @param  array $bindingStyle
-     * @return AutoDiscover
+     * @return Zend_Soap_AutoDiscover
      */
     public function setBindingStyle(array $bindingStyle=array())
     {
-        if (isset($bindingStyle['style'])) {
-            $this->bindingStyle['style'] = $bindingStyle['style'];
+        if(isset($bindingStyle['style'])) {
+            $this->_bindingStyle['style'] = $bindingStyle['style'];
         }
-        if (isset($bindingStyle['transport'])) {
-            $this->bindingStyle['transport'] = $bindingStyle['transport'];
+        if(isset($bindingStyle['transport'])) {
+            $this->_bindingStyle['transport'] = $bindingStyle['transport'];
         }
         return $this;
     }
 
     /**
+     * Detect and returns the current HTTP/HTTPS Schema
+     *
+     * @return string
+     */
+    protected function getSchema()
+    {
+        $schema = "http";
+        if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') {
+            $schema = 'https';
+        }
+        return $schema;
+    }
+
+    /**
+     * Detect and return the current hostname
+     *
+     * @return string
+     */
+    protected function getHostName()
+    {
+        if(isset($_SERVER['HTTP_HOST'])) {
+            $host = $_SERVER['HTTP_HOST'];
+        } else {
+            $host = $_SERVER['SERVER_NAME'];
+        }
+        return $host;
+    }
+
+    /**
+     * Detect and return the current script name without parameters
+     *
+     * @return string
+     */
+    protected function getRequestUriWithoutParameters()
+    {
+        if (isset($_SERVER['HTTP_X_ORIGINAL_URL'])) { // IIS with Microsoft Rewrite Module
+            $requestUri = $_SERVER['HTTP_X_ORIGINAL_URL'];
+        } elseif (isset($_SERVER['HTTP_X_REWRITE_URL'])) { // check this first so IIS will catch
+            $requestUri = $_SERVER['HTTP_X_REWRITE_URL'];
+        } elseif (isset($_SERVER['REQUEST_URI'])) {
+            $requestUri = $_SERVER['REQUEST_URI'];
+        } elseif (isset($_SERVER['ORIG_PATH_INFO'])) { // IIS 5.0, PHP as CGI
+            $requestUri = $_SERVER['ORIG_PATH_INFO'];
+        } else {
+            $requestUri = $_SERVER['SCRIPT_NAME'];
+        }
+        if( ($pos = strpos($requestUri, "?")) !== false) {
+            $requestUri = substr($requestUri, 0, $pos);
+        }
+
+        return $requestUri;
+    }
+
+    /**
      * Set the strategy that handles functions and classes that are added AFTER this call.
      *
-     * @param  ComplexTypeStrategy $strategy
-     * @return AutoDiscover
+     * @param  boolean|string|Zend_Soap_Wsdl_Strategy_Interface $strategy
+     * @return Zend_Soap_AutoDiscover
      */
-    public function setComplexTypeStrategy(ComplexTypeStrategy $strategy)
+    public function setComplexTypeStrategy($strategy)
     {
-        $this->strategy = $strategy;
+        $this->_strategy = $strategy;
+        if($this->_wsdl instanceof  Zend_Soap_Wsdl) {
+            $this->_wsdl->setComplexTypeStrategy($strategy);
+        }
 
         return $this;
     }
@@ -320,11 +306,29 @@ class AutoDiscover
      * Set the Class the SOAP server will use
      *
      * @param string $class Class Name
-     * @return AutoDiscover
+     * @param string $namespace Class Namspace - Not Used
+     * @param array $argv Arguments to instantiate the class - Not Used
+     * @return Zend_Soap_AutoDiscover
      */
-    public function setClass($class)
+    public function setClass($class, $namespace = '', $argv = null)
     {
-        $this->class = $class;
+        $uri = $this->getUri();
+
+        $wsdl = new $this->_wsdlClass($class, $uri, $this->_strategy);
+
+        // The wsdl:types element must precede all other elements (WS-I Basic Profile 1.1 R2023)
+        $wsdl->addSchemaTypeSection();
+
+        $port = $wsdl->addPortType($class . 'Port');
+        $binding = $wsdl->addBinding($class . 'Binding', 'tns:' .$class. 'Port');
+
+        $wsdl->addSoapBinding($binding, $this->_bindingStyle['style'], $this->_bindingStyle['transport']);
+        $wsdl->addService($class . 'Service', $class . 'Port', 'tns:' . $class . 'Binding', $uri);
+        foreach ($this->_reflection->reflectClass($class)->getMethods() as $method) {
+            $this->_addFunctionToWsdl($method, $wsdl, $port, $binding);
+        }
+        $this->_wsdl = $wsdl;
+
         return $this;
     }
 
@@ -332,76 +336,54 @@ class AutoDiscover
      * Add a Single or Multiple Functions to the WSDL
      *
      * @param string $function Function Name
-     * @return AutoDiscover
+     * @param string $namespace Function namespace - Not Used
+     * @return Zend_Soap_AutoDiscover
      */
-    public function addFunction($function)
+    public function addFunction($function, $namespace = '')
     {
-        $this->functions[] = $function;
-        return $this;
-    }
+        static $port;
+        static $operation;
+        static $binding;
 
-    /**
-     * Generate the WSDL for a service class.
-     *
-     * @return Wsdl
-     */
-    protected function _generateClass()
-    {
-        return $this->_generateWsdl($this->reflection->reflectClass($this->class)->getMethods());
-    }
-
-    /**
-     * Generate the WSDL for a set of functions.
-     *
-     * @return Wsdl
-     */
-    protected function _generateFunctions()
-    {
-        $methods = array();
-        foreach (array_unique($this->functions) as $func) {
-            $methods[] = $this->reflection->reflectFunction($func);
+        if (!is_array($function)) {
+            $function = (array) $function;
         }
 
-        return $this->_generateWsdl($methods);
-    }
-
-    /**
-     * Generate the WSDL for a set of reflection method instances.
-     *
-     * @param array $reflectionMethods
-     * @return Wsdl
-     */
-    protected function _generateWsdl(array $reflectionMethods)
-    {
         $uri = $this->getUri();
 
-        $serviceName = $this->getServiceName();
-        $wsdl = new $this->wsdlClass($serviceName, $uri, $this->strategy, $this->classMap);
+        if (!($this->_wsdl instanceof Zend_Soap_Wsdl)) {
+            $parts = explode('.', basename($_SERVER['SCRIPT_NAME']));
+            $name = $parts[0];
+            $wsdl = new Zend_Soap_Wsdl($name, $uri, $this->_strategy);
 
-        // The wsdl:types element must precede all other elements (WS-I Basic Profile 1.1 R2023)
-        $wsdl->addSchemaTypeSection();
+            // The wsdl:types element must precede all other elements (WS-I Basic Profile 1.1 R2023)
+            $wsdl->addSchemaTypeSection();
 
-        $port = $wsdl->addPortType($serviceName . 'Port');
-        $binding = $wsdl->addBinding($serviceName . 'Binding', 'tns:' . $serviceName . 'Port');
+            $port = $wsdl->addPortType($name . 'Port');
+            $binding = $wsdl->addBinding($name . 'Binding', 'tns:' .$name. 'Port');
 
-        $wsdl->addSoapBinding($binding, $this->bindingStyle['style'], $this->bindingStyle['transport']);
-        $wsdl->addService($serviceName . 'Service', $serviceName . 'Port', 'tns:' . $serviceName . 'Binding', $uri);
-
-        foreach ($reflectionMethods as $method) {
-            $this->_addFunctionToWsdl($method, $wsdl, $port, $binding);
+            $wsdl->addSoapBinding($binding, $this->_bindingStyle['style'], $this->_bindingStyle['transport']);
+            $wsdl->addService($name . 'Service', $name . 'Port', 'tns:' . $name . 'Binding', $uri);
+        } else {
+            $wsdl = $this->_wsdl;
         }
 
-        return $wsdl;
+        foreach ($function as $func) {
+            $method = $this->_reflection->reflectFunction($func);
+            $this->_addFunctionToWsdl($method, $wsdl, $port, $binding);
+        }
+        $this->_wsdl = $wsdl;
+
+        return $this;
     }
 
     /**
      * Add a function to the WSDL document.
      *
-     * @param $function \Zend\Server\Reflection\AbstractFunction function to add
-     * @param $wsdl \Zend\Soap\Wsdl WSDL document
-     * @param $port object wsdl:portType
-     * @param $binding object wsdl:binding
-     * @throws Exception\InvalidArgumentException
+     * @param Zend_Server_Reflection_Function_Abstract $function function to add
+     * @param Zend_Soap_Wsdl                           $wsdl     WSDL document
+     * @param object                                   $port     wsdl:portType
+     * @param object                                   $binding  wsdl:binding
      * @return void
      */
     protected function _addFunctionToWsdl($function, $wsdl, $port, $binding)
@@ -419,20 +401,19 @@ class AutoDiscover
             }
         }
         if ($prototype === null) {
-            throw new Exception\InvalidArgumentException("No prototypes could be found for the '" . $function->getName() . "' function");
+            require_once "Zend/Soap/AutoDiscover/Exception.php";
+            throw new Zend_Soap_AutoDiscover_Exception("No prototypes could be found for the '" . $function->getName() . "' function");
         }
-
-        $functionName = $wsdl->translateType($function->getName());
 
         // Add the input message (parameters)
         $args = array();
-        if ($this->bindingStyle['style'] == 'document') {
+        if ($this->_bindingStyle['style'] == 'document') {
             // Document style: wrap all parameters in a sequence element
             $sequence = array();
             foreach ($prototype->getParameters() as $param) {
                 $sequenceElement = array(
                     'name' => $param->getName(),
-                    'type' => $wsdl->getType($this->discoveryStrategy->getFunctionParameterType($param))
+                    'type' => $wsdl->getType($param->getType())
                 );
                 if ($param->isOptional()) {
                     $sequenceElement['nillable'] = 'true';
@@ -440,7 +421,7 @@ class AutoDiscover
                 $sequence[] = $sequenceElement;
             }
             $element = array(
-                'name' => $functionName,
+                'name' => $function->getName(),
                 'sequence' => $sequence
             );
             // Add the wrapper element part, which must be named 'parameters'
@@ -448,105 +429,183 @@ class AutoDiscover
         } else {
             // RPC style: add each parameter as a typed part
             foreach ($prototype->getParameters() as $param) {
-                $args[$param->getName()] = array('type' => $wsdl->getType($this->discoveryStrategy->getFunctionParameterType($param)));
+                $args[$param->getName()] = array('type' => $wsdl->getType($param->getType()));
             }
         }
-        $wsdl->addMessage($functionName . 'In', $args);
+        $wsdl->addMessage($function->getName() . 'In', $args);
 
-        $isOneWayMessage = $this->discoveryStrategy->isFunctionOneWay($function, $prototype);
+        $isOneWayMessage = false;
+        if($prototype->getReturnType() == "void") {
+            $isOneWayMessage = true;
+        }
 
-        if ($isOneWayMessage == false) {
+        if($isOneWayMessage == false) {
             // Add the output message (return value)
             $args = array();
-            if ($this->bindingStyle['style'] == 'document') {
+            if ($this->_bindingStyle['style'] == 'document') {
                 // Document style: wrap the return value in a sequence element
                 $sequence = array();
                 if ($prototype->getReturnType() != "void") {
                     $sequence[] = array(
-                        'name' => $functionName . 'Result',
-                        'type' => $wsdl->getType($this->discoveryStrategy->getFunctionReturnType($function, $prototype))
+                        'name' => $function->getName() . 'Result',
+                        'type' => $wsdl->getType($prototype->getReturnType())
                     );
                 }
                 $element = array(
-                    'name' => $functionName . 'Response',
+                    'name' => $function->getName() . 'Response',
                     'sequence' => $sequence
                 );
                 // Add the wrapper element part, which must be named 'parameters'
                 $args['parameters'] = array('element' => $wsdl->addElement($element));
-            } elseif ($prototype->getReturnType() != "void") {
+            } else if ($prototype->getReturnType() != "void") {
                 // RPC style: add the return value as a typed part
-                $args['return'] = array('type' => $wsdl->getType($this->discoveryStrategy->getFunctionReturnType($function, $prototype)));
+                $args['return'] = array('type' => $wsdl->getType($prototype->getReturnType()));
             }
-            $wsdl->addMessage($functionName . 'Out', $args);
+            $wsdl->addMessage($function->getName() . 'Out', $args);
         }
 
         // Add the portType operation
-        if ($isOneWayMessage == false) {
-            $portOperation = $wsdl->addPortOperation($port, $functionName, 'tns:' . $functionName . 'In', 'tns:' . $functionName . 'Out');
+        if($isOneWayMessage == false) {
+            $portOperation = $wsdl->addPortOperation($port, $function->getName(), 'tns:' . $function->getName() . 'In', 'tns:' . $function->getName() . 'Out');
         } else {
-            $portOperation = $wsdl->addPortOperation($port, $functionName, 'tns:' . $functionName . 'In', false);
+            $portOperation = $wsdl->addPortOperation($port, $function->getName(), 'tns:' . $function->getName() . 'In', false);
         }
-        $desc = $this->discoveryStrategy->getFunctionDocumentation($function);
+        $desc = $function->getDescription();
         if (strlen($desc) > 0) {
             $wsdl->addDocumentation($portOperation, $desc);
         }
 
         // When using the RPC style, make sure the operation style includes a 'namespace' attribute (WS-I Basic Profile 1.1 R2717)
-        $operationBodyStyle = $this->operationBodyStyle;
-        if ($this->bindingStyle['style'] == 'rpc' && !isset($operationBodyStyle['namespace'])) {
-            $operationBodyStyle['namespace'] = '' . $uri;
+        if ($this->_bindingStyle['style'] == 'rpc' && !isset($this->_operationBodyStyle['namespace'])) {
+            $this->_operationBodyStyle['namespace'] = ''.$uri;
         }
 
         // Add the binding operation
-        if ($isOneWayMessage == false) {
-            $operation = $wsdl->addBindingOperation($binding, $functionName, $operationBodyStyle, $operationBodyStyle);
+        if($isOneWayMessage == false) {
+            $operation = $wsdl->addBindingOperation($binding, $function->getName(),  $this->_operationBodyStyle, $this->_operationBodyStyle);
         } else {
-            $operation = $wsdl->addBindingOperation($binding, $functionName, $operationBodyStyle);
+            $operation = $wsdl->addBindingOperation($binding, $function->getName(),  $this->_operationBodyStyle);
         }
-        $wsdl->addSoapOperation($operation, $uri . '#' . $functionName);
+        $wsdl->addSoapOperation($operation, $uri . '#' .$function->getName());
+
+        // Add the function name to the list
+        $this->_functions[] = $function->getName();
     }
 
     /**
-     * Generate the WSDL file from the configured input.
+     * Action to take when an error occurs
      *
-     * @throws Exception\RuntimeException
-     * @return Wsdl
+     * @param string $fault
+     * @param string|int $code
+     * @throws Zend_Soap_AutoDiscover_Exception
      */
-    public function generate()
+    public function fault($fault = null, $code = null)
     {
-        if ($this->class && $this->functions) {
-            throw new Exception\RuntimeException("Can either dump functions or a class as a service, not both.");
-        }
+        require_once "Zend/Soap/AutoDiscover/Exception.php";
+        throw new Zend_Soap_AutoDiscover_Exception("Function has no use in AutoDiscover.");
+    }
 
-        if ($this->class) {
-            $wsdl = $this->_generateClass();
-        } else {
-            $wsdl = $this->_generateFunctions();
+    /**
+     * Handle the Request
+     *
+     * @param string $request A non-standard request - Not Used
+     */
+    public function handle($request = false)
+    {
+        if (!headers_sent()) {
+            header('Content-Type: text/xml');
         }
-
-        return $wsdl;
+        $this->_wsdl->dump();
     }
 
     /**
      * Proxy to WSDL dump function
      *
      * @param string $filename
-     * @return bool
-     * @throws \Zend\Soap\Exception\RuntimeException
+     * @return boolean
+     * @throws Zend_Soap_AutoDiscover_Exception
      */
     public function dump($filename)
     {
-        return $this->generate()->dump($filename);
+        if($this->_wsdl !== null) {
+            return $this->_wsdl->dump($filename);
+        } else {
+            /**
+             * @see Zend_Soap_AutoDiscover_Exception
+             */
+            require_once "Zend/Soap/AutoDiscover/Exception.php";
+            throw new Zend_Soap_AutoDiscover_Exception("Cannot dump autodiscovered contents, WSDL file has not been generated yet.");
+        }
     }
 
     /**
      * Proxy to WSDL toXml() function
      *
      * @return string
-     * @throws \Zend\Soap\Exception\RuntimeException
+     * @throws Zend_Soap_AutoDiscover_Exception
      */
     public function toXml()
     {
-        return $this->generate()->toXml();
+        if($this->_wsdl !== null) {
+            return $this->_wsdl->toXml();
+        } else {
+            /**
+             * @see Zend_Soap_AutoDiscover_Exception
+             */
+            require_once "Zend/Soap/AutoDiscover/Exception.php";
+            throw new Zend_Soap_AutoDiscover_Exception("Cannot return autodiscovered contents, WSDL file has not been generated yet.");
+        }
+    }
+
+    /**
+     * Return an array of functions in the WSDL
+     *
+     * @return array
+     */
+    public function getFunctions()
+    {
+        return $this->_functions;
+    }
+
+    /**
+     * Load Functions
+     *
+     * @param unknown_type $definition
+     * @throws Zend_Soap_AutoDiscover_Exception
+     */
+    public function loadFunctions($definition)
+    {
+        require_once "Zend/Soap/AutoDiscover/Exception.php";
+        throw new Zend_Soap_AutoDiscover_Exception("Function has no use in AutoDiscover.");
+    }
+
+    /**
+     * Set Persistance
+     *
+     * @param int $mode
+     * @throws Zend_Soap_AutoDiscover_Exception
+     */
+    public function setPersistence($mode)
+    {
+        require_once "Zend/Soap/AutoDiscover/Exception.php";
+        throw new Zend_Soap_AutoDiscover_Exception("Function has no use in AutoDiscover.");
+    }
+
+    /**
+     * Returns an XSD Type for the given PHP type
+     *
+     * @param string $type PHP Type to get the XSD type for
+     * @return string
+     */
+    public function getType($type)
+    {
+        if (!($this->_wsdl instanceof Zend_Soap_Wsdl)) {
+            /** @todo Exception throwing may be more correct */
+
+            // WSDL is not defined yet, so we can't recognize type in context of current service
+            return '';
+        } else {
+            return $this->_wsdl->getType($type);
+        }
     }
 }

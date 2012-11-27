@@ -1,21 +1,40 @@
 <?php
 /**
- * Zend Framework (http://framework.zend.com/)
+ * Zend Framework
  *
- * @link      http://github.com/zendframework/zf2 for the canonical source repository
- * @copyright Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
- * @license   http://framework.zend.com/license/new-bsd New BSD License
- * @package   Zend_XmlRpc
+ * LICENSE
+ *
+ * This source file is subject to the new BSD license that is bundled
+ * with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://framework.zend.com/license/new-bsd
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@zend.com so we can send you a copy immediately.
+ *
+ * @category   Zend
+ * @package    Zend_XmlRpc
+ * @subpackage Value
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id: Struct.php 24593 2012-01-05 20:35:02Z matthew $
  */
 
-namespace Zend\XmlRpc\Value;
+
+/**
+ * Zend_XmlRpc_Value_Collection
+ */
+require_once 'Zend/XmlRpc/Value/Collection.php';
+
 
 /**
  * @category   Zend
  * @package    Zend_XmlRpc
  * @subpackage Value
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
-class Struct extends AbstractCollection
+class Zend_XmlRpc_Value_Struct extends Zend_XmlRpc_Value_Collection
 {
     /**
      * Set the value of an struct native type
@@ -24,7 +43,7 @@ class Struct extends AbstractCollection
      */
     public function __construct($value)
     {
-        $this->type = self::XMLRPC_TYPE_STRUCT;
+        $this->_type = self::XMLRPC_TYPE_STRUCT;
         parent::__construct($value);
     }
 
@@ -40,8 +59,9 @@ class Struct extends AbstractCollection
         $generator->openElement('value')
                   ->openElement('struct');
 
-        if (is_array($this->value)) {
-            foreach ($this->value as $name => $val) {
+        if (is_array($this->_value)) {
+            foreach ($this->_value as $name => $val) {
+                /* @var $val Zend_XmlRpc_Value */
                 $generator->openElement('member')
                           ->openElement('name', $name)
                           ->closeElement('name');

@@ -1,58 +1,72 @@
 <?php
 /**
- * Zend Framework (http://framework.zend.com/)
+ * Zend Framework
  *
- * @link      http://github.com/zendframework/zf2 for the canonical source repository
- * @copyright Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
- * @license   http://framework.zend.com/license/new-bsd New BSD License
- * @package   Zend_Tag
+ * LICENSE
+ *
+ * This source file is subject to the new BSD license that is bundled
+ * with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://framework.zend.com/license/new-bsd
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@zend.com so we can send you a copy immediately.
+ *
+ * @category   Zend
+ * @package    Zend_Tag
+ * @subpackage Cloud
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id: Cloud.php 24593 2012-01-05 20:35:02Z matthew $
  */
 
-namespace Zend\Tag;
-
-use Traversable;
-use Zend\Stdlib\ArrayUtils;
+/**
+ * @see Zend_Tag_Item
+ */
+require_once 'Zend/Tag/Item.php';
 
 /**
  * @category   Zend
  * @package    Zend_Tag
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
-class Cloud
+class Zend_Tag_Cloud
 {
     /**
-     * DecoratorInterface for the cloud
+     * Decorator for the cloud
      *
-     * @var Cloud\Decorator\AbstractCloud
+     * @var Zend_Tag_Cloud_Decorator_Cloud
      */
-    protected $cloudDecorator = null;
+    protected $_cloudDecorator = null;
 
     /**
-     * DecoratorInterface for the tags
+     * Decorator for the tags
      *
-     * @var Cloud\Decorator\AbstractTag
+     * @var Zend_Tag_Cloud_Decorator_Tag
      */
-    protected $tagDecorator = null;
+    protected $_tagDecorator = null;
 
     /**
      * List of all tags
      *
-     * @var ItemList
+     * @var Zend_Tag_ItemList
      */
-    protected $tags = null;
+    protected $_tags = null;
 
     /**
-     * Plugin manager for decorators
+     * Plugin loader for decorators
      *
-     * @var Cloud\DecoratorPluginManager
+     * @var Zend_Loader_PluginLoader
      */
-    protected $decorators = null;
+    protected $_pluginLoader = null;
 
     /**
      * Option keys to skip when calling setOptions()
      *
      * @var array
      */
-    protected $skipOptions = array(
+    protected $_skipOptions = array(
         'options',
         'config',
     );
@@ -60,32 +74,51 @@ class Cloud
     /**
      * Create a new tag cloud with options
      *
-     * @param  array|Traversable $options
+     * @param mixed $options
      */
     public function __construct($options = null)
     {
-        if ($options instanceof Traversable) {
-            $options = ArrayUtils::iteratorToArray($options);
+        if ($options instanceof Zend_Config) {
+            $this->setConfig($options);
         }
+
         if (is_array($options)) {
             $this->setOptions($options);
         }
     }
 
     /**
+     * Set options from Zend_Config
+     *
+     * @param  Zend_Config $config
+     * @return Zend_Tag_Cloud
+     */
+    public function setConfig(Zend_Config $config)
+    {
+        $this->setOptions($config->toArray());
+
+        return $this;
+    }
+
+    /**
      * Set options from array
      *
-     * @param  array $options Configuration for Cloud
-     * @return Cloud
+     * @param  array $options Configuration for Zend_Tag_Cloud
+     * @return Zend_Tag_Cloud
      */
     public function setOptions(array $options)
     {
+        if (isset($options['prefixPath'])) {
+            $this->addPrefixPaths($options['prefixPath']);
+            unset($options['prefixPath']);
+        }
+
         foreach ($options as $key => $value) {
-            if (in_array(strtolower($key), $this->skipOptions)) {
+            if (in_array(strtolower($key), $this->_skipOptions)) {
                 continue;
             }
 
-            $method = 'set' . $key;
+            $method = 'set' . ucfirst($key);
             if (method_exists($this, $method)) {
                 $this->$method($value);
             }
@@ -104,42 +137,44 @@ class Cloud
      * decorators.
      *
      * @param  array $tags
-     * @throws Exception\InvalidArgumentException
-     * @return Cloud
+     * @return Zend_Tag_Cloud
      */
     public function setTags(array $tags)
     {
+        // Validate and cleanup the tags
+        $itemList = $this->getItemList();
+
         foreach ($tags as $tag) {
-            $this->appendTag($tag);
+            if ($tag instanceof Zend_Tag_Taggable) {
+                $itemList[] = $tag;
+            } else if (is_array($tag)) {
+                $itemList[] = new Zend_Tag_Item($tag);
+            } else {
+                require_once 'Zend/Tag/Cloud/Exception.php';
+                throw new Zend_Tag_Cloud_Exception('Tag must be an instance of Zend_Tag_Taggable or an array');
+            }
         }
+
         return $this;
     }
 
     /**
      * Append a single tag to the cloud
      *
-     * @param  TaggableInterface|array $tag
-     * @throws Exception\InvalidArgumentException
-     * @return Cloud
+     * @param  Zend_Tag_Taggable|array $tag
+     * @return Zend_Tag_Cloud
      */
     public function appendTag($tag)
     {
         $tags = $this->getItemList();
-
-        if ($tag instanceof TaggableInterface) {
+        if ($tag instanceof Zend_Tag_Taggable) {
             $tags[] = $tag;
-            return $this;
+        } else if (is_array($tag)) {
+            $tags[] = new Zend_Tag_Item($tag);
+        } else {
+            require_once 'Zend/Tag/Cloud/Exception.php';
+            throw new Zend_Tag_Cloud_Exception('Tag must be an instance of Zend_Tag_Taggable or an array');
         }
-
-        if (!is_array($tag)) {
-            throw new Exception\InvalidArgumentException(sprintf(
-                'Tag must be an instance of %s\TaggableInterface or an array; received "%s"',
-                __NAMESPACE__,
-                (is_object($tag) ? get_class($tag) : gettype($tag))
-            ));
-        }
-
-        $tags[] = new Item($tag);
 
         return $this;
     }
@@ -147,12 +182,12 @@ class Cloud
     /**
      * Set the item list
      *
-     * @param  ItemList $itemList
-     * @return Cloud
+     * @param  Zend_Tag_ItemList $itemList
+     * @return Zend_Tag_Cloud
      */
-    public function setItemList(ItemList $itemList)
+    public function setItemList(Zend_Tag_ItemList $itemList)
     {
-        $this->tags = $itemList;
+        $this->_tags = $itemList;
         return $this;
     }
 
@@ -161,22 +196,22 @@ class Cloud
      *
      * If item list is undefined, creates one.
      *
-     * @return ItemList
+     * @return Zend_Tag_ItemList
      */
     public function getItemList()
     {
-        if (null === $this->tags) {
-            $this->setItemList(new ItemList());
+        if (null === $this->_tags) {
+            require_once 'Zend/Tag/ItemList.php';
+            $this->setItemList(new Zend_Tag_ItemList());
         }
-        return $this->tags;
+        return $this->_tags;
     }
 
     /**
      * Set the decorator for the cloud
      *
      * @param  mixed $decorator
-     * @throws Exception\InvalidArgumentException
-     * @return Cloud
+     * @return Zend_Tag_Cloud
      */
     public function setCloudDecorator($decorator)
     {
@@ -193,14 +228,16 @@ class Cloud
         }
 
         if (is_string($decorator)) {
-            $decorator = $this->getDecoratorPluginManager()->get($decorator, $options);
+            $classname = $this->getPluginLoader()->load($decorator);
+            $decorator = new $classname($options);
         }
 
-        if (!($decorator instanceof Cloud\Decorator\AbstractCloud)) {
-            throw new Exception\InvalidArgumentException('DecoratorInterface is no instance of Cloud\Decorator\AbstractCloud');
+        if (!($decorator instanceof Zend_Tag_Cloud_Decorator_Cloud)) {
+            require_once 'Zend/Tag/Cloud/Exception.php';
+            throw new Zend_Tag_Cloud_Exception('Decorator is no instance of Zend_Tag_Cloud_Decorator_Cloud');
         }
 
-        $this->cloudDecorator = $decorator;
+        $this->_cloudDecorator = $decorator;
 
         return $this;
     }
@@ -208,22 +245,21 @@ class Cloud
     /**
      * Get the decorator for the cloud
      *
-     * @return Cloud\Decorator\AbstractCloud
+     * @return Zend_Tag_Cloud_Decorator_Cloud
      */
     public function getCloudDecorator()
     {
-        if (null === $this->cloudDecorator) {
+        if (null === $this->_cloudDecorator) {
             $this->setCloudDecorator('htmlCloud');
         }
-        return $this->cloudDecorator;
+        return $this->_cloudDecorator;
     }
 
     /**
      * Set the decorator for the tags
      *
      * @param  mixed $decorator
-     * @throws Exception\InvalidArgumentException
-     * @return Cloud
+     * @return Zend_Tag_Cloud
      */
     public function setTagDecorator($decorator)
     {
@@ -240,14 +276,16 @@ class Cloud
         }
 
         if (is_string($decorator)) {
-            $decorator = $this->getDecoratorPluginManager()->get($decorator, $options);
+            $classname = $this->getPluginLoader()->load($decorator);
+            $decorator = new $classname($options);
         }
 
-        if (!($decorator instanceof Cloud\Decorator\AbstractTag)) {
-            throw new Exception\InvalidArgumentException('DecoratorInterface is no instance of Cloud\Decorator\Tag');
+        if (!($decorator instanceof Zend_Tag_Cloud_Decorator_Tag)) {
+            require_once 'Zend/Tag/Cloud/Exception.php';
+            throw new Zend_Tag_Cloud_Exception('Decorator is no instance of Zend_Tag_Cloud_Decorator_Tag');
         }
 
-        $this->tagDecorator = $decorator;
+        $this->_tagDecorator = $decorator;
 
         return $this;
     }
@@ -255,40 +293,82 @@ class Cloud
     /**
      * Get the decorator for the tags
      *
-     * @return Cloud\Decorator\AbstractTag
+     * @return Zend_Tag_Cloud_Decorator_Tag
      */
     public function getTagDecorator()
     {
-        if (null === $this->tagDecorator) {
+        if (null === $this->_tagDecorator) {
             $this->setTagDecorator('htmlTag');
         }
-        return $this->tagDecorator;
+        return $this->_tagDecorator;
     }
 
     /**
-     * Set plugin manager for use with decorators
+     * Set plugin loaders for use with decorators
      *
-     * @param  Cloud\DecoratorPluginManager $decorators
-     * @return Cloud
+     * @param  Zend_Loader_PluginLoader_Interface $loader
+     * @return Zend_Tag_Cloud
      */
-    public function setDecoratorPluginManager(Cloud\DecoratorPluginManager $decorators)
+    public function setPluginLoader(Zend_Loader_PluginLoader_Interface $loader)
     {
-        $this->decorators = $decorators;
+        $this->_pluginLoader = $loader;
         return $this;
     }
 
     /**
-     * Get the plugin manager for decorators
+     * Get the plugin loader for decorators
      *
-     * @return Cloud\DecoratorPluginManager
+     * @return Zend_Loader_PluginLoader
      */
-    public function getDecoratorPluginManager()
+    public function getPluginLoader()
     {
-        if ($this->decorators === null) {
-            $this->decorators = new Cloud\DecoratorPluginManager();
+        if ($this->_pluginLoader === null) {
+            $prefix     = 'Zend_Tag_Cloud_Decorator_';
+            $pathPrefix = 'Zend/Tag/Cloud/Decorator/';
+
+            require_once 'Zend/Loader/PluginLoader.php';
+            $this->_pluginLoader = new Zend_Loader_PluginLoader(array($prefix => $pathPrefix));
         }
 
-        return $this->decorators;
+        return $this->_pluginLoader;
+    }
+
+    /**
+     * Add many prefix paths at once
+     *
+     * @param  array $paths
+     * @return Zend_Tag_Cloud
+     */
+    public function addPrefixPaths(array $paths)
+    {
+        if (isset($paths['prefix']) && isset($paths['path'])) {
+            return $this->addPrefixPath($paths['prefix'], $paths['path']);
+        }
+
+        foreach ($paths as $path) {
+            if (!isset($path['prefix']) || !isset($path['path'])) {
+                continue;
+            }
+
+            $this->addPrefixPath($path['prefix'], $path['path']);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Add prefix path for plugin loader
+     *
+     * @param  string $prefix
+     * @param  string $path
+     * @return Zend_Tag_Cloud
+     */
+    public function addPrefixPath($prefix, $path)
+    {
+        $loader = $this->getPluginLoader();
+        $loader->addPrefixPath($prefix, $path);
+
+        return $this;
     }
 
     /**
@@ -320,7 +400,7 @@ class Cloud
         try {
             $result = $this->render();
             return $result;
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $message = "Exception caught by tag cloud: " . $e->getMessage()
                      . "\nStack Trace:\n" . $e->getTraceAsString();
             trigger_error($message, E_USER_WARNING);

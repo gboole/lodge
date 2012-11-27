@@ -1,32 +1,44 @@
 <?php
 /**
- * Zend Framework (http://framework.zend.com/)
+ * Zend Framework
  *
- * @link      http://github.com/zendframework/zf2 for the canonical source repository
- * @copyright Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
- * @license   http://framework.zend.com/license/new-bsd New BSD License
- * @package   Zend_Soap
+ * LICENSE
+ *
+ * This source file is subject to the new BSD license that is bundled
+ * with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://framework.zend.com/license/new-bsd
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@zend.com so we can send you a copy immediately.
+ *
+ * @category   Zend
+ * @package    Zend_Soap
+ * @subpackage Client
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id: DotNet.php 24593 2012-01-05 20:35:02Z matthew $
  */
 
-namespace Zend\Soap\Client;
+/** Zend_Soap_Client */
+require_once 'Zend/Soap/Client.php';
 
-use Zend\Soap\Client as SOAPClient;
-use Zend\Soap\Exception;
+if (extension_loaded('soap')) {
 
 /**
- * .NET SOAP client
+ * Zend_Soap_Client_Local
  *
  * Class is intended to be used with .Net Web Services.
  *
  * Important! Class is at experimental stage now.
- * Please leave your notes, compatibility issues reports or
+ * Please leave your notes, compatiblity issues reports or
  * suggestions in fw-webservices@lists.zend.com or fw-general@lists.com
  *
  * @category   Zend
  * @package    Zend_Soap
  * @subpackage Client
  */
-class DotNet extends SOAPClient
+class Zend_Soap_Client_DotNet extends Zend_Soap_Client
 {
     /**
      * Constructor
@@ -49,15 +61,15 @@ class DotNet extends SOAPClient
      * My be overridden in descendant classes
      *
      * @param array $arguments
-     * @throws Exception\RuntimeException
-     * @return array
+     * @throws Zend_Soap_Client_Exception
      */
     protected function _preProcessArguments($arguments)
     {
         if (count($arguments) > 1  ||
             (count($arguments) == 1  &&  !is_array(reset($arguments)))
            ) {
-            throw new Exception\RuntimeException('.Net webservice arguments have to be grouped into array: array(\'a\' => $a, \'b\' => $b, ...).');
+            require_once 'Zend/Soap/Client/Exception.php';
+            throw new Zend_Soap_Client_Exception('.Net webservice arguments have to be grouped into array: array(\'a\' => $a, \'b\' => $b, ...).');
         }
 
         // Do nothing
@@ -69,8 +81,7 @@ class DotNet extends SOAPClient
      *
      * My be overridden in descendant classes
      *
-     * @param object $result
-     * @return mixed
+     * @param array $arguments
      */
     protected function _preProcessResult($result)
     {
@@ -80,3 +91,5 @@ class DotNet extends SOAPClient
     }
 
 }
+
+} // end if (extension_loaded('soap')

@@ -1,63 +1,66 @@
 <?php
 /**
- * Zend Framework (http://framework.zend.com/)
+ * Zend Framework
  *
- * @link      http://github.com/zendframework/zf2 for the canonical source repository
- * @copyright Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
- * @license   http://framework.zend.com/license/new-bsd New BSD License
- * @package   Zend_Server
+ * LICENSE
+ *
+ * This source file is subject to the new BSD license that is bundled
+ * with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://framework.zend.com/license/new-bsd
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@zend.com so we can send you a copy immediately.
+ *
+ * @category   Zend
+ * @package    Zend_Server
+ * @subpackage Method
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id: Parameter.php 24593 2012-01-05 20:35:02Z matthew $
  */
-
-namespace Zend\Server\Method;
 
 /**
  * Method parameter metadata
  *
  * @category   Zend
  * @package    Zend_Server
- * @subpackage Zend_Server_Method
+ * @subpackage Method
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
-class Parameter
+class Zend_Server_Method_Parameter
 {
     /**
-     * Default parameter value
-     *
-     * @var mixed
+     * @var mixed Default parameter value
      */
-    protected $defaultValue;
+    protected $_defaultValue;
 
     /**
-     * Parameter description
-     *
-     * @var string
+     * @var string Parameter description
      */
-    protected $description = '';
+    protected $_description = '';
 
     /**
-     * Parameter variable name
-     *
-     * @var string
+     * @var string Parameter variable name
      */
-    protected $name;
+    protected $_name;
 
     /**
-     * Is parameter optional?
-     *
-     * @var bool
+     * @var bool Is parameter optional?
      */
-    protected $optional = false;
+    protected $_optional = false;
 
     /**
-     * Parameter type
-     *
-     * @var string
+     * @var string Parameter type
      */
-    protected $type = 'mixed';
+    protected $_type = 'mixed';
 
     /**
      * Constructor
      *
      * @param  null|array $options
+     * @return void
      */
     public function __construct($options = null)
     {
@@ -70,7 +73,7 @@ class Parameter
      * Set object state from array of options
      *
      * @param  array $options
-     * @return \Zend\Server\Method\Parameter
+     * @return Zend_Server_Method_Parameter
      */
     public function setOptions(array $options)
     {
@@ -87,11 +90,11 @@ class Parameter
      * Set default value
      *
      * @param  mixed $defaultValue
-     * @return \Zend\Server\Method\Parameter
+     * @return Zend_Server_Method_Parameter
      */
     public function setDefaultValue($defaultValue)
     {
-        $this->defaultValue = $defaultValue;
+        $this->_defaultValue = $defaultValue;
         return $this;
     }
 
@@ -102,18 +105,18 @@ class Parameter
      */
     public function getDefaultValue()
     {
-        return $this->defaultValue;
+        return $this->_defaultValue;
     }
 
     /**
      * Set description
      *
      * @param  string $description
-     * @return \Zend\Server\Method\Parameter
+     * @return Zend_Server_Method_Parameter
      */
     public function setDescription($description)
     {
-        $this->description = (string) $description;
+        $this->_description = (string) $description;
         return $this;
     }
 
@@ -124,18 +127,18 @@ class Parameter
      */
     public function getDescription()
     {
-        return $this->description;
+        return $this->_description;
     }
 
     /**
      * Set name
      *
      * @param  string $name
-     * @return \Zend\Server\Method\Parameter
+     * @return Zend_Server_Method_Parameter
      */
     public function setName($name)
     {
-        $this->name = (string) $name;
+        $this->_name = (string) $name;
         return $this;
     }
 
@@ -146,18 +149,18 @@ class Parameter
      */
     public function getName()
     {
-        return $this->name;
+        return $this->_name;
     }
 
     /**
      * Set optional flag
      *
      * @param  bool $flag
-     * @return \Zend\Server\Method\Parameter
+     * @return Zend_Server_Method_Parameter
      */
     public function setOptional($flag)
     {
-        $this->optional = (bool) $flag;
+        $this->_optional = (bool) $flag;
         return $this;
     }
 
@@ -168,18 +171,18 @@ class Parameter
      */
     public function isOptional()
     {
-        return $this->optional;
+        return $this->_optional;
     }
 
     /**
      * Set parameter type
      *
      * @param  string $type
-     * @return \Zend\Server\Method\Parameter
+     * @return Zend_Server_Method_Parameter
      */
     public function setType($type)
     {
-        $this->type = (string) $type;
+        $this->_type = (string) $type;
         return $this;
     }
 
@@ -190,7 +193,7 @@ class Parameter
      */
     public function getType()
     {
-        return $this->type;
+        return $this->_type;
     }
 
     /**

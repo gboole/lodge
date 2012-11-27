@@ -1,64 +1,73 @@
 <?php
 /**
- * Zend Framework (http://framework.zend.com/)
+ * Zend Framework
  *
- * @link      http://github.com/zendframework/zf2 for the canonical source repository
- * @copyright Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
- * @license   http://framework.zend.com/license/new-bsd New BSD License
- * @package   Zend_Serializer
+ * LICENSE
+ *
+ * This source file is subject to the new BSD license that is bundled
+ * with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://framework.zend.com/license/new-bsd
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@zend.com so we can send you a copy immediately.
+ *
+ * @category   Zend
+ * @package    Zend_Serializer
+ * @subpackage Adapter
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id: PhpSerialize.php 24593 2012-01-05 20:35:02Z matthew $
  */
 
-namespace Zend\Serializer\Adapter;
-
-use Zend\Serializer\Exception;
-use Zend\Stdlib\ErrorHandler;
+/** @see Zend_Serializer_Adapter_AdapterAbstract */
+require_once 'Zend/Serializer/Adapter/AdapterAbstract.php';
 
 /**
  * @category   Zend
  * @package    Zend_Serializer
  * @subpackage Adapter
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
-class PhpSerialize extends AbstractAdapter
+class Zend_Serializer_Adapter_PhpSerialize extends Zend_Serializer_Adapter_AdapterAbstract
 {
     /**
-     * Serialized boolean false value
-     *
-     * @var null|string
+     *  @var null|string Serialized boolean false value
      */
-    private static $serializedFalse = null;
+    private static $_serializedFalse = null;
 
     /**
      * Constructor
+     *
+     * @param  array|Zend_Config $opts
+     * @return void
      */
-    public function __construct($options = null)
+    public function __construct($opts = array())
     {
-        // needed to check if a returned false is based on a serialize false
-        // or based on failure (igbinary can overwrite [un]serialize functions)
-        if (self::$serializedFalse === null) {
-            self::$serializedFalse = serialize(false);
-        }
+        parent::__construct($opts);
 
-        parent::__construct($options);
+        if (self::$_serializedFalse === null) {
+            self::$_serializedFalse = serialize(false);
+        }
     }
 
     /**
      * Serialize using serialize()
      *
      * @param  mixed $value
+     * @param  array $opts
      * @return string
-     * @throws Exception\RuntimeException On serialize error
+     * @throws Zend_Serializer_Exception On serialize error
      */
-    public function serialize($value)
+    public function serialize($value, array $opts = array())
     {
-        ErrorHandler::start();
         $ret = serialize($value);
-        $err = ErrorHandler::stop();
-        if ($err) {
-            throw new Exception\RuntimeException(
-                'Serialization failed', 0, $err
-            );
+        if ($ret === false) {
+            $lastErr = error_get_last();
+            require_once 'Zend/Serializer/Exception.php';
+            throw new Zend_Serializer_Exception($lastErr['message']);
         }
-
         return $ret;
     }
 
@@ -67,28 +76,19 @@ class PhpSerialize extends AbstractAdapter
      *
      * @todo   Allow integration with unserialize_callback_func
      * @param  string $serialized
+     * @param  array $opts
      * @return mixed
-     * @throws Exception\RuntimeException on unserialize error
+     * @throws Zend_Serializer_Exception on unserialize error
      */
-    public function unserialize($serialized)
+    public function unserialize($serialized, array $opts = array())
     {
-        if (!is_string($serialized) || !preg_match('/^((s|i|d|b|a|O|C):|N;)/', $serialized)) {
-            return $serialized;
+        // TODO: @see php.ini directive "unserialize_callback_func"
+        $ret = @unserialize($serialized);
+        if ($ret === false && $serialized !== self::$_serializedFalse) {
+            $lastErr = error_get_last();
+            require_once 'Zend/Serializer/Exception.php';
+            throw new Zend_Serializer_Exception($lastErr['message']);
         }
-
-        // If we have a serialized boolean false value, just return false;
-        // prevents the unserialize handler from creating an error.
-        if ($serialized === self::$serializedFalse) {
-            return false;
-        }
-
-        ErrorHandler::start(E_NOTICE);
-        $ret = unserialize($serialized);
-        $err = ErrorHandler::stop();
-        if ($ret === false) {
-            throw new Exception\RuntimeException('Unserialization failed', 0, $err);
-        }
-
         return $ret;
     }
 }

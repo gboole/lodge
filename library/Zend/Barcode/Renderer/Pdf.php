@@ -1,62 +1,87 @@
 <?php
 /**
- * Zend Framework (http://framework.zend.com/)
+ * Zend Framework
  *
- * @link      http://github.com/zendframework/zf2 for the canonical source repository
- * @copyright Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
- * @license   http://framework.zend.com/license/new-bsd New BSD License
- * @package   Zend_Barcode
+ * LICENSE
+ *
+ * This source file is subject to the new BSD license that is bundled
+ * with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://framework.zend.com/license/new-bsd
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@zend.com so we can send you a copy immediately.
+ *
+ * @category   Zend
+ * @package    Zend_Barcode
+ * @subpackage Renderer
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id: Pdf.php 24593 2012-01-05 20:35:02Z matthew $
  */
 
-namespace Zend\Barcode\Renderer;
+/** @see Zend_Barcode_Renderer_RendererAbstract */
+require_once 'Zend/Barcode/Renderer/RendererAbstract.php';
 
-use ZendPdf\Color;
-use ZendPdf\Font;
-use ZendPdf\Page;
-use ZendPdf\PdfDocument;
+/** @see Zend_Pdf */
+require_once 'Zend/Pdf.php';
+
+/** @see Zend_Pdf_Page */
+require_once 'Zend/Pdf/Page.php';
+
+/** @see Zend_Pdf_Color_Rgb */
+require_once 'Zend/Pdf/Color/Rgb.php';
 
 /**
  * Class for rendering the barcode in PDF resource
  *
  * @category   Zend
  * @package    Zend_Barcode
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
-class Pdf extends AbstractRenderer
+class Zend_Barcode_Renderer_Pdf extends Zend_Barcode_Renderer_RendererAbstract
 {
     /**
      * PDF resource
-     * @var PdfDocument
+     * @var Zend_Pdf
      */
-    protected $resource = null;
+    protected $_resource = null;
 
     /**
      * Page number in PDF resource
      * @var integer
      */
-    protected $page = 0;
+    protected $_page = 0;
 
     /**
      * Module size rendering
      * @var float
      */
-    protected $moduleSize = 0.5;
+    protected $_moduleSize = 0.5;
 
     /**
-     * Set a PDF resource to draw the barcode inside
-     *
-     * @param PdfDocument $pdf
-     * @param integer     $page
-     * @return Pdf
+     * Set an image resource to draw the barcode inside
+     * @param resource $value
+     * @return Zend_Barcode_Renderer
+     * @throw Zend_Barcode_Renderer_Exception
      */
-    public function setResource(PdfDocument $pdf, $page = 0)
+    public function setResource($pdf, $page = 0)
     {
-        $this->resource = $pdf;
-        $this->page     = intval($page);
+        if (!$pdf instanceof Zend_Pdf) {
+            require_once 'Zend/Barcode/Renderer/Exception.php';
+            throw new Zend_Barcode_Renderer_Exception(
+                'Invalid Zend_Pdf resource provided to setResource()'
+            );
+        }
 
-        if (!count($this->resource->pages)) {
-            $this->page = 0;
-            $this->resource->pages[] = new Page(
-                Page::SIZE_A4
+        $this->_resource = $pdf;
+        $this->_page     = intval($page);
+
+        if (!count($this->_resource->pages)) {
+            $this->_page = 0;
+            $this->_resource->pages[] = new Zend_Pdf_Page(
+                Zend_Pdf_Page::SIZE_A4
             );
         }
         return $this;
@@ -67,7 +92,7 @@ class Pdf extends AbstractRenderer
      *
      * @return void
      */
-    protected function checkSpecificParams()
+    protected function _checkParams()
     {
     }
 
@@ -79,24 +104,24 @@ class Pdf extends AbstractRenderer
     {
         $this->draw();
         header("Content-Type: application/pdf");
-        echo $this->resource->render();
+        echo $this->_resource->render();
     }
 
     /**
      * Initialize the PDF resource
      * @return void
      */
-    protected function initRenderer()
+    protected function _initRenderer()
     {
-        if ($this->resource === null) {
-            $this->resource = new PdfDocument();
-            $this->resource->pages[] = new Page(
-                Page::SIZE_A4
+        if ($this->_resource === null) {
+            $this->_resource = new Zend_Pdf();
+            $this->_resource->pages[] = new Zend_Pdf_Page(
+                Zend_Pdf_Page::SIZE_A4
             );
         }
 
-        $pdfPage = $this->resource->pages[$this->page];
-        $this->adjustPosition($pdfPage->getHeight(), $pdfPage->getWidth());
+        $pdfPage = $this->_resource->pages[$this->_page];
+        $this->_adjustPosition($pdfPage->getHeight(), $pdfPage->getWidth());
     }
 
     /**
@@ -105,25 +130,25 @@ class Pdf extends AbstractRenderer
      * @param integer $color
      * @param boolean $filled
      */
-    protected function drawPolygon($points, $color, $filled = true)
+    protected function _drawPolygon($points, $color, $filled = true)
     {
-        $page = $this->resource->pages[$this->page];
+        $page = $this->_resource->pages[$this->_page];
         foreach ($points as $point) {
-            $x[] = $point[0] * $this->moduleSize + $this->leftOffset;
-            $y[] = $page->getHeight() - $point[1] * $this->moduleSize - $this->topOffset;
+            $x[] = $point[0] * $this->_moduleSize + $this->_leftOffset;
+            $y[] = $page->getHeight() - $point[1] * $this->_moduleSize - $this->_topOffset;
         }
         if (count($y) == 4) {
             if ($x[0] != $x[3] && $y[0] == $y[3]) {
-                $y[0] -= ($this->moduleSize / 2);
-                $y[3] -= ($this->moduleSize / 2);
+                $y[0] -= ($this->_moduleSize / 2);
+                $y[3] -= ($this->_moduleSize / 2);
             }
             if ($x[1] != $x[2] && $y[1] == $y[2]) {
-                $y[1] += ($this->moduleSize / 2);
-                $y[2] += ($this->moduleSize / 2);
+                $y[1] += ($this->_moduleSize / 2);
+                $y[2] += ($this->_moduleSize / 2);
             }
         }
 
-        $color = new Color\Rgb(
+        $color = new Zend_Pdf_Color_Rgb(
             (($color & 0xFF0000) >> 16) / 255.0,
             (($color & 0x00FF00) >> 8) / 255.0,
             ($color & 0x0000FF) / 255.0
@@ -131,17 +156,17 @@ class Pdf extends AbstractRenderer
 
         $page->setLineColor($color);
         $page->setFillColor($color);
-        $page->setLineWidth($this->moduleSize);
+        $page->setLineWidth($this->_moduleSize);
 
         $fillType = ($filled)
-                  ? Page::SHAPE_DRAW_FILL_AND_STROKE
-                  : Page::SHAPE_DRAW_STROKE;
+                  ? Zend_Pdf_Page::SHAPE_DRAW_FILL_AND_STROKE
+                  : Zend_Pdf_Page::SHAPE_DRAW_STROKE;
 
         $page->drawPolygon($x, $y, $fillType);
     }
 
     /**
-     * Draw a polygon in the rendering resource
+     * Draw a text in the rendering resource
      * @param string $text
      * @param float $size
      * @param array $position
@@ -150,7 +175,7 @@ class Pdf extends AbstractRenderer
      * @param string $alignment
      * @param float $orientation
      */
-    protected function drawText(
+    protected function _drawText(
         $text,
         $size,
         $position,
@@ -159,8 +184,8 @@ class Pdf extends AbstractRenderer
         $alignment = 'center',
         $orientation = 0
     ) {
-        $page  = $this->resource->pages[$this->page];
-        $color = new Color\Rgb(
+        $page  = $this->_resource->pages[$this->_page];
+        $color = new Zend_Pdf_Color_Rgb(
             (($color & 0xFF0000) >> 16) / 255.0,
             (($color & 0x00FF00) >> 8) / 255.0,
             ($color & 0x0000FF) / 255.0
@@ -168,17 +193,17 @@ class Pdf extends AbstractRenderer
 
         $page->setLineColor($color);
         $page->setFillColor($color);
-        $page->setFont(Font::fontWithPath($font), $size * $this->moduleSize * 1.2);
+        $page->setFont(Zend_Pdf_Font::fontWithPath($font), $size * $this->_moduleSize * 1.2);
 
         $width = $this->widthForStringUsingFontSize(
             $text,
-            Font::fontWithPath($font),
-            $size * $this->moduleSize
+            Zend_Pdf_Font::fontWithPath($font),
+            $size * $this->_moduleSize
         );
 
         $angle = pi() * $orientation / 180;
-        $left = $position[0] * $this->moduleSize + $this->leftOffset;
-        $top  = $page->getHeight() - $position[1] * $this->moduleSize - $this->topOffset;
+        $left = $position[0] * $this->_moduleSize + $this->_leftOffset;
+        $top  = $page->getHeight() - $position[1] * $this->_moduleSize - $this->_topOffset;
 
         switch ($alignment) {
             case 'center':
@@ -198,7 +223,7 @@ class Pdf extends AbstractRenderer
      * Calculate the width of a string:
      * in case of using alignment parameter in drawText
      * @param string $text
-     * @param Font $font
+     * @param Zend_Pdf_Font $font
      * @param float $fontSize
      * @return float
      */

@@ -107,6 +107,7 @@ class UserController extends Zend_Controller_Action
 		}
 	}
 
+
 	public function processeditAction()
 	{
 		try{
@@ -170,26 +171,28 @@ class UserController extends Zend_Controller_Action
 	}
 
 	public function authAction(){
-		$request 	= $this->getRequest();
-		$registry 	= Zend_Registry::getInstance();
-		$auth		= Zend_Auth::getInstance();
+		try{
 
-		$DB = $registry['DB'];
+			$request 	= $this->getRequest();
+			$registry 	= Zend_Registry::getInstance();
+			$auth		= Zend_Auth::getInstance();
 
-		$authAdapter = new Zend_Auth_Adapter_DbTable($DB);
-		$authAdapter->setTableName('L_USERS')
-		->setIdentityColumn('username')
-		->setCredentialColumn('password');
+			$DB = $registry['DB'];
 
-		// Set the input credential values
-		$uname = $request->getParam('username');
-		$paswd = $request->getParam('password');
-		$authAdapter->setIdentity($uname);
-		$authAdapter->setCredential(md5($paswd));
+			$authAdapter = new Zend_Auth_Adapter_DbTable($DB);
+			$authAdapter->setTableName('L_USERS')
+			->setIdentityColumn('username')
+			->setCredentialColumn('password');
 
-		// Perform the authentication query, saving the result
-		$result = $auth->authenticate($authAdapter);
+			// Set the input credential values
+			$uname = $request->getParam('username');
+			$paswd = $request->getParam('password');
+			$authAdapter->setIdentity($uname);
+			$authAdapter->setCredential(md5($paswd));
 
+			// Perform the authentication query, saving the result
+			$result = $auth->authenticate($authAdapter);
+		}catch (Exception $e) {echo $e;}
 		if($result->isValid()){
 			$data = $authAdapter->getResultRowObject(null,'password');
 			$auth->getStorage()->write($data);
@@ -198,6 +201,8 @@ class UserController extends Zend_Controller_Action
 			$this->_redirect('/user/loginform');
 		}
 	}
+
+
 	public function userpageAction(){
 		$auth		= Zend_Auth::getInstance();
 
@@ -207,9 +212,12 @@ class UserController extends Zend_Controller_Action
 
 		$request = $this->getRequest();
 		$user		= $auth->getIdentity();
-		$real_name	= $user->real_name;
+		$firstname	= $user->firstname;
+		$lastname	= $user->lastname;
 		$username	= $user->username;
+		$id	= $user->id;
 		$logoutUrl  = $request->getBaseURL().'/user/logout';
+		$editProfileUrl  = $request->getBaseURL().'/user/editprofile';
 
 		$ns = new Zend_Session_Namespace('HelloWorld');
 			
@@ -221,8 +229,11 @@ class UserController extends Zend_Controller_Action
 			
 		$this->view->assign('request', $ns->yourLoginRequest);
 
-		$this->view->assign('username', $real_name);
+		$this->view->assign('username', $username);
+		$this->view->assign('firstname', $firstname);
+		$this->view->assign('id', $id);
 		$this->view->assign('urllogout',$logoutUrl);
+		$this->view->assign('processeditprofile',$editProfileUrl);
 	}
 
 	public function logoutAction()
@@ -240,6 +251,37 @@ class UserController extends Zend_Controller_Action
 			echo "<br />";
 		}
 
+	}
+
+	public function editprofileAction()
+	{
+		try{
+			$auth		= Zend_Auth::getInstance();
+
+			if(!$auth->hasIdentity()){
+				$this->_redirect('/user/loginform');
+			}
+		 $request = $this->getRequest();
+		 $user		= $auth->getIdentity();
+		 $id	= $user->id;
+
+		 $user = new Application_Model_UserMapper();
+		 $result = new Application_Model_User();
+		 $user->find($id, $result);
+
+
+		 $this->view->assign('data',$result);
+		 $this->view->assign('action', $request->getBaseURL()."/user/processedit");
+		 $this->view->assign('title','Member Editing');
+		 $this->view->assign('label_uname','Username');
+		 $this->view->assign('label_fname','First Name');
+		 $this->view->assign('label_lname','Last Name');
+		 $this->view->assign('label_pass','Password');
+		 $this->view->assign('label_submit','Edit');
+		 $this->view->assign('description','Please update this form completely:');
+		} catch (Exception $e) {
+			echo 'Caught exception: ',  $e->getMessage(), "\n";
+		}
 	}
 
 

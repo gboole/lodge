@@ -1,77 +1,66 @@
 <?php
 /**
- * Zend Framework (http://framework.zend.com/)
+ * Zend Framework
  *
- * @link      http://github.com/zendframework/zf2 for the canonical source repository
- * @copyright Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
- * @license   http://framework.zend.com/license/new-bsd New BSD License
- * @package   Zend_Session
+ * LICENSE
+ *
+ * This source file is subject to the new BSD license that is bundled
+ * with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://framework.zend.com/license/new-bsd
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@zend.com so we can send you a copy immediately.
+ *
+ * @category   Zend
+ * @package    Zend_Session
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id: HttpUserAgent.php 24593 2012-01-05 20:35:02Z matthew $
+ * @since      Preview Release 0.2
  */
 
-namespace Zend\Session\Validator;
+/**
+ * @see Zend_Session_Validator_Abstract
+ */
+require_once 'Zend/Session/Validator/Abstract.php';
 
 /**
+ * Zend_Session_Validator_HttpUserAgent
+ *
  * @category   Zend
  * @package    Zend_Session
  * @subpackage Validator
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
-class HttpUserAgent implements ValidatorInterface
+class Zend_Session_Validator_HttpUserAgent extends Zend_Session_Validator_Abstract
 {
-    /**
-     * Internal data
-     *
-     * @var string
-     */
-    protected $data;
 
     /**
-     * Constructor
-     * get the current user agent and store it in the session as 'valid data'
+     * Setup() - this method will get the current user agent and store it in the session
+     * as 'valid data'
      *
-     * @param string|null $data
+     * @return void
      */
-    public function __construct($data = null)
+    public function setup()
     {
-        if (empty($data)) {
-            $data = isset($_SERVER['HTTP_USER_AGENT'])
-                  ? $_SERVER['HTTP_USER_AGENT']
-                  : null;
-        }
-        $this->data = $data;
+        $this->setValidData( (isset($_SERVER['HTTP_USER_AGENT'])
+            ? $_SERVER['HTTP_USER_AGENT'] : null) );
     }
 
     /**
-     * isValid() - this method will determine if the current user agent matches the
+     * Validate() - this method will determine if the current user agent matches the
      * user agent we stored when we initialized this variable.
      *
      * @return bool
      */
-    public function isValid()
+    public function validate()
     {
-        $userAgent = isset($_SERVER['HTTP_USER_AGENT'])
-                   ? $_SERVER['HTTP_USER_AGENT']
-                   : null;
+        $currentBrowser = (isset($_SERVER['HTTP_USER_AGENT'])
+            ? $_SERVER['HTTP_USER_AGENT'] : null);
 
-        return ($userAgent === $this->getData());
+        return $currentBrowser === $this->getValidData();
     }
 
-    /**
-     * Retrieve token for validating call
-     *
-     * @return string
-     */
-    public function getData()
-    {
-        return $this->data;
-    }
-
-    /**
-     * Return validator name
-     *
-     * @return string
-     */
-    public function getName()
-    {
-        return __CLASS__;
-    }
 }

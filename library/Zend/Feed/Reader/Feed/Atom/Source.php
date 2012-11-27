@@ -1,56 +1,60 @@
 <?php
 /**
- * Zend Framework (http://framework.zend.com/)
+ * Zend Framework
  *
- * @link      http://github.com/zendframework/zf2 for the canonical source repository
- * @copyright Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
- * @license   http://framework.zend.com/license/new-bsd New BSD License
- * @package   Zend_Feed
+ * LICENSE
+ *
+ * This source file is subject to the new BSD license that is bundled
+ * with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://framework.zend.com/license/new-bsd
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@zend.com so we can send you a copy immediately.
+ *
+ * @category   Zend
+ * @package    Zend_Feed_Reader
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id: Source.php 24593 2012-01-05 20:35:02Z matthew $
  */
 
-namespace Zend\Feed\Reader\Feed\Atom;
-
-use DOMElement;
-use DOMXPath;
-use Zend\Feed\Reader;
-use Zend\Feed\Reader\Feed;
+/**
+ * @see Zend_Feed_Reader_Feed_Atom
+ */
+require_once 'Zend/Feed/Reader/Feed/Atom.php';
 
 /**
-* @category Zend
-* @package Reader
-*/
-class Source extends Feed\Atom
+ * @category   Zend
+ * @package    Zend_Feed_Reader
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ */
+class Zend_Feed_Reader_Feed_Atom_Source extends Zend_Feed_Reader_Feed_Atom
 {
 
     /**
      * Constructor: Create a Source object which is largely just a normal
-     * Zend\Feed\Reader\AbstractFeed object only designed to retrieve feed level
+     * Zend_Feed_Reader_FeedAbstract object only designed to retrieve feed level
      * metadata from an Atom entry's source element.
      *
      * @param DOMElement $source
      * @param string $xpathPrefix Passed from parent Entry object
      * @param string $type Nearly always Atom 1.0
      */
-    public function __construct(DOMElement $source, $xpathPrefix, $type = Reader\Reader::TYPE_ATOM_10)
+    public function __construct(DOMElement $source, $xpathPrefix, $type = Zend_Feed_Reader::TYPE_ATOM_10)
     {
-        $this->domDocument = $source->ownerDocument;
-        $this->xpath = new DOMXPath($this->domDocument);
-        $this->data['type'] = $type;
-        $this->registerNamespaces();
-        $this->loadExtensions();
+        $this->_domDocument = $source->ownerDocument;
+        $this->_xpath = new DOMXPath($this->_domDocument);
+        $this->_data['type'] = $type;
+        $this->_registerNamespaces();
+        $this->_loadExtensions();
 
-        $manager = Reader\Reader::getExtensionManager();
-        $extensions = array('Atom\Feed', 'DublinCore\Feed');
-
-        foreach ($extensions as $name) {
-            $extension = $manager->get($name);
-            $extension->setDomDocument($this->domDocument);
-            $extension->setType($this->data['type']);
-            $extension->setXpath($this->xpath);
-            $this->extensions[$name] = $extension;
-        }
-
-        foreach ($this->extensions as $extension) {
+        $atomClass = Zend_Feed_Reader::getPluginLoader()->getClassName('Atom_Feed');
+        $this->_extensions['Atom_Feed'] = new $atomClass($this->_domDocument, $this->_data['type'], $this->_xpath);
+        $atomClass = Zend_Feed_Reader::getPluginLoader()->getClassName('DublinCore_Feed');
+        $this->_extensions['DublinCore_Feed'] = new $atomClass($this->_domDocument, $this->_data['type'], $this->_xpath);
+        foreach ($this->_extensions as $extension) {
             $extension->setXpathPrefix(rtrim($xpathPrefix, '/') . '/atom:source');
         }
     }
@@ -93,6 +97,6 @@ class Source extends Feed\Atom
     /**
      * @return void
      */
-    protected function indexEntries() {}
+    protected function _indexEntries() {}
 
 }

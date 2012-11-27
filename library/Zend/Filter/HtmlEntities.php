@@ -1,56 +1,70 @@
 <?php
 /**
- * Zend Framework (http://framework.zend.com/)
+ * Zend Framework
  *
- * @link      http://github.com/zendframework/zf2 for the canonical source repository
- * @copyright Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
- * @license   http://framework.zend.com/license/new-bsd New BSD License
- * @package   Zend_Filter
+ * LICENSE
+ *
+ * This source file is subject to the new BSD license that is bundled
+ * with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://framework.zend.com/license/new-bsd
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@zend.com so we can send you a copy immediately.
+ *
+ * @category   Zend
+ * @package    Zend_Filter
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id: HtmlEntities.php 24593 2012-01-05 20:35:02Z matthew $
  */
 
-namespace Zend\Filter;
-
-use Traversable;
-use Zend\Stdlib\ArrayUtils;
+/**
+ * @see Zend_Filter_Interface
+ */
+require_once 'Zend/Filter/Interface.php';
 
 /**
  * @category   Zend
  * @package    Zend_Filter
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
-class HtmlEntities extends AbstractFilter
+class Zend_Filter_HtmlEntities implements Zend_Filter_Interface
 {
     /**
      * Corresponds to the second htmlentities() argument
      *
      * @var integer
      */
-    protected $quoteStyle;
+    protected $_quoteStyle;
 
     /**
      * Corresponds to the third htmlentities() argument
      *
      * @var string
      */
-    protected $encoding;
+    protected $_encoding;
 
     /**
      * Corresponds to the forth htmlentities() argument
      *
-     * @var boolean
+     * @var unknown_type
      */
-    protected $doubleQuote;
+    protected $_doubleQuote;
 
     /**
      * Sets filter options
      *
-     * @param array|Traversable $options
+     * @param  integer|array $quoteStyle
+     * @param  string  $charSet
+     * @return void
      */
     public function __construct($options = array())
     {
-        if ($options instanceof Traversable) {
-            $options = ArrayUtils::iteratorToArray($options);
-        }
-        if (!is_array($options)) {
+        if ($options instanceof Zend_Config) {
+            $options = $options->toArray();
+        } else if (!is_array($options)) {
             $options = func_get_args();
             $temp['quotestyle'] = array_shift($options);
             if (!empty($options)) {
@@ -61,7 +75,7 @@ class HtmlEntities extends AbstractFilter
         }
 
         if (!isset($options['quotestyle'])) {
-            $options['quotestyle'] = ENT_QUOTES;
+            $options['quotestyle'] = ENT_COMPAT;
         }
 
         if (!isset($options['encoding'])) {
@@ -87,18 +101,18 @@ class HtmlEntities extends AbstractFilter
      */
     public function getQuoteStyle()
     {
-        return $this->quoteStyle;
+        return $this->_quoteStyle;
     }
 
     /**
      * Sets the quoteStyle option
      *
      * @param  integer $quoteStyle
-     * @return HtmlEntities Provides a fluent interface
+     * @return Zend_Filter_HtmlEntities Provides a fluent interface
      */
     public function setQuoteStyle($quoteStyle)
     {
-        $this->quoteStyle = $quoteStyle;
+        $this->_quoteStyle = $quoteStyle;
         return $this;
     }
 
@@ -110,18 +124,18 @@ class HtmlEntities extends AbstractFilter
      */
     public function getEncoding()
     {
-         return $this->encoding;
+         return $this->_encoding;
     }
 
     /**
      * Set encoding
      *
      * @param  string $value
-     * @return HtmlEntities
+     * @return Zend_Filter_HtmlEntities
      */
     public function setEncoding($value)
     {
-        $this->encoding = (string) $value;
+        $this->_encoding = (string) $value;
         return $this;
     }
 
@@ -143,7 +157,7 @@ class HtmlEntities extends AbstractFilter
      * Proxies to {@link setEncoding()}
      *
      * @param  string $charSet
-     * @return HtmlEntities Provides a fluent interface
+     * @return Zend_Filter_HtmlEntities Provides a fluent interface
      */
     public function setCharSet($charSet)
     {
@@ -157,29 +171,28 @@ class HtmlEntities extends AbstractFilter
      */
     public function getDoubleQuote()
     {
-        return $this->doubleQuote;
+        return $this->_doubleQuote;
     }
 
     /**
      * Sets the doubleQuote option
      *
      * @param boolean $doubleQuote
-     * @return HtmlEntities Provides a fluent interface
+     * @return Zend_Filter_HtmlEntities Provides a fluent interface
      */
     public function setDoubleQuote($doubleQuote)
     {
-        $this->doubleQuote = (boolean) $doubleQuote;
+        $this->_doubleQuote = (boolean) $doubleQuote;
         return $this;
     }
 
     /**
-     * Defined by Zend\Filter\FilterInterface
+     * Defined by Zend_Filter_Interface
      *
      * Returns the string $value, converting characters to their corresponding HTML entity
      * equivalents where they exist
      *
      * @param  string $value
-     * @throws Exception\DomainException
      * @return string
      */
     public function filter($value)
@@ -187,13 +200,15 @@ class HtmlEntities extends AbstractFilter
         $filtered = htmlentities((string) $value, $this->getQuoteStyle(), $this->getEncoding(), $this->getDoubleQuote());
         if (strlen((string) $value) && !strlen($filtered)) {
             if (!function_exists('iconv')) {
-                throw new Exception\DomainException('Encoding mismatch has resulted in htmlentities errors');
+                require_once 'Zend/Filter/Exception.php';
+                throw new Zend_Filter_Exception('Encoding mismatch has resulted in htmlentities errors');
             }
             $enc      = $this->getEncoding();
-            $value    = iconv('', $this->getEncoding() . '//IGNORE', (string) $value);
+            $value    = iconv('', $enc . '//IGNORE', (string) $value);
             $filtered = htmlentities($value, $this->getQuoteStyle(), $enc, $this->getDoubleQuote());
             if (!strlen($filtered)) {
-                throw new Exception\DomainException('Encoding mismatch has resulted in htmlentities errors');
+                require_once 'Zend/Filter/Exception.php';
+                throw new Zend_Filter_Exception('Encoding mismatch has resulted in htmlentities errors');
             }
         }
         return $filtered;

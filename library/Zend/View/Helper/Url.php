@@ -1,114 +1,51 @@
 <?php
 /**
- * Zend Framework (http://framework.zend.com/)
+ * Zend Framework
  *
- * @link      http://github.com/zendframework/zf2 for the canonical source repository
- * @copyright Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
- * @license   http://framework.zend.com/license/new-bsd New BSD License
- * @package   Zend_View
+ * LICENSE
+ *
+ * This source file is subject to the new BSD license that is bundled
+ * with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://framework.zend.com/license/new-bsd
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@zend.com so we can send you a copy immediately.
+ *
+ * @category   Zend
+ * @package    Zend_View
+ * @subpackage Helper
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @version    $Id: Url.php 24593 2012-01-05 20:35:02Z matthew $
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 
-namespace Zend\View\Helper;
-
-use Zend\Mvc\ModuleRouteListener;
-use Zend\Mvc\Router\RouteMatch;
-use Zend\Mvc\Router\RouteStackInterface;
-use Zend\View\Exception;
+/** Zend_View_Helper_Abstract.php */
+require_once 'Zend/View/Helper/Abstract.php';
 
 /**
- * Helper for making easy links and getting urls that depend on the routes and router.
+ * Helper for making easy links and getting urls that depend on the routes and router
  *
  * @package    Zend_View
  * @subpackage Helper
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
-class Url extends AbstractHelper
+class Zend_View_Helper_Url extends Zend_View_Helper_Abstract
 {
-    /**
-     * RouteStackInterface instance.
-     *
-     * @var RouteStackInterface
-     */
-    protected $router;
-
-    /**
-     * RouteInterface match returned by the router.
-     *
-     * @var RouteMatch.
-     */
-    protected $routeMatch;
-
-    /**
-     * Set the router to use for assembling.
-     *
-     * @param RouteStackInterface $router
-     * @return Url
-     */
-    public function setRouter(RouteStackInterface $router)
-    {
-        $this->router = $router;
-        return $this;
-    }
-
-    /**
-     * Set route match returned by the router.
-     *
-     * @param  RouteMatch $routeMatch
-     * @return self
-     */
-    public function setRouteMatch(RouteMatch $routeMatch)
-    {
-        $this->routeMatch = $routeMatch;
-        return $this;
-    }
-
     /**
      * Generates an url given the name of a route.
      *
-     * @see    Zend\Mvc\Router\RouteInterface::assemble()
-     * @param  string  $name               Name of the route
-     * @param  array   $params             Parameters for the link
-     * @param  array   $options            Options for the route
-     * @param  boolean $reuseMatchedParams Whether to reuse matched parameters
-     * @return string Url                  For the link href attribute
-     * @throws Exception\RuntimeException  If no RouteStackInterface was provided
-     * @throws Exception\RuntimeException  If no RouteMatch was provided
-     * @throws Exception\RuntimeException  If RouteMatch didn't contain a matched route name
+     * @access public
+     *
+     * @param  array $urlOptions Options passed to the assemble method of the Route object.
+     * @param  mixed $name The name of a Route to use. If null it will use the current Route
+     * @param  bool $reset Whether or not to reset the route defaults with those provided
+     * @return string Url for the link href attribute.
      */
-    public function __invoke($name = null, array $params = array(), $options = array(), $reuseMatchedParams = false)
+    public function url(array $urlOptions = array(), $name = null, $reset = false, $encode = true)
     {
-        if (null === $this->router) {
-            throw new Exception\RuntimeException('No RouteStackInterface instance provided');
-        }
-
-        if (3 == func_num_args() && is_bool($options)) {
-            $reuseMatchedParams = $options;
-            $options = array();
-        }
-
-        if ($name === null) {
-            if ($this->routeMatch === null) {
-                throw new Exception\RuntimeException('No RouteMatch instance provided');
-            }
-
-            $name = $this->routeMatch->getMatchedRouteName();
-
-            if ($name === null) {
-                throw new Exception\RuntimeException('RouteMatch does not contain a matched route name');
-            }
-        }
-
-        if ($reuseMatchedParams && $this->routeMatch !== null) {
-            $routeMatchParams = $this->routeMatch->getParams();
-
-            if (isset($routeMatchParams[ModuleRouteListener::ORIGINAL_CONTROLLER])) {
-                $routeMatchParams['controller'] = $routeMatchParams[ModuleRouteListener::ORIGINAL_CONTROLLER];
-            }
-
-            $params = array_merge($routeMatchParams, $params);
-        }
-
-        $options['name'] = $name;
-
-        return $this->router->assemble($params, $options);
+        $router = Zend_Controller_Front::getInstance()->getRouter();
+        return $router->assemble($urlOptions, $name, $reset, $encode);
     }
 }

@@ -19,217 +19,185 @@
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 
-namespace Zend\Form\Element;
-
-use Traversable;
-use Zend\Form\Element;
-use Zend\InputFilter\InputProviderInterface;
-use Zend\Validator\InArray as InArrayValidator;
-use Zend\Validator\ValidatorInterface;
+/** Zend_Form_Element_Xhtml */
+require_once 'Zend/Form/Element/Xhtml.php';
 
 /**
+ * Checkbox form element
+ *
  * @category   Zend
  * @package    Zend_Form
  * @subpackage Element
  * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id: Checkbox.php 24593 2012-01-05 20:35:02Z matthew $
  */
-class Checkbox extends Element implements InputProviderInterface
+class Zend_Form_Element_Checkbox extends Zend_Form_Element_Xhtml
 {
     /**
-     * Seed attributes
-     *
+     * Is the checkbox checked?
+     * @var bool
+     */
+    public $checked = false;
+
+    /**
+     * Use formCheckbox view helper by default
+     * @var string
+     */
+    public $helper = 'formCheckbox';
+
+    /**
+     * Options that will be passed to the view helper
      * @var array
      */
-    protected $attributes = array(
-        'type' => 'checkbox'
+    public $options = array(
+        'checkedValue'   => '1',
+        'uncheckedValue' => '0',
     );
 
     /**
-     * @var ValidatorInterface
-     */
-    protected $validator;
-
-    /**
-     * @var bool
-     */
-    protected $useHiddenElement = true;
-
-    /**
+     * Value when checked
      * @var string
      */
-    protected $uncheckedValue = '0';
+    protected $_checkedValue = '1';
 
     /**
+     * Value when not checked
      * @var string
      */
-    protected $checkedValue = '1';
+    protected $_uncheckedValue = '0';
 
     /**
-     * Accepted options for MultiCheckbox:
-     * - use_hidden_element: do we render hidden element?
-     * - unchecked_value: value for checkbox when unchecked
-     * - checked_value: value for checkbox when checked
+     * Current value
+     * @var string 0 or 1
+     */
+    protected $_value = '0';
+
+    /**
+     * Set options
      *
-     * @param  array|\Traversable $options
-     * @return Checkbox
+     * Intercept checked and unchecked values and set them early; test stored
+     * value against checked and unchecked values after configuration.
+     *
+     * @param  array $options
+     * @return Zend_Form_Element_Checkbox
      */
-    public function setOptions($options)
+    public function setOptions(array $options)
     {
+        if (array_key_exists('checkedValue', $options)) {
+            $this->setCheckedValue($options['checkedValue']);
+            unset($options['checkedValue']);
+        }
+        if (array_key_exists('uncheckedValue', $options)) {
+            $this->setUncheckedValue($options['uncheckedValue']);
+            unset($options['uncheckedValue']);
+        }
         parent::setOptions($options);
 
-        if (isset($options['use_hidden_element'])) {
-            $this->setUseHiddenElement($options['use_hidden_element']);
-        }
-
-        if (isset($options['unchecked_value'])) {
-            $this->setUncheckedValue($options['unchecked_value']);
-        }
-
-        if (isset($options['checked_value'])) {
-            $this->setCheckedValue($options['checked_value']);
+        $curValue = $this->getValue();
+        $test     = array($this->getCheckedValue(), $this->getUncheckedValue());
+        if (!in_array($curValue, $test)) {
+            $this->setValue($curValue);
         }
 
         return $this;
     }
 
     /**
-     * Do we render hidden element?
+     * Set value
      *
-     * @param  bool $useHiddenElement
-     * @return Checkbox
+     * If value matches checked value, sets to that value, and sets the checked
+     * flag to true.
+     *
+     * Any other value causes the unchecked value to be set as the current
+     * value, and the checked flag to be set as false.
+     *
+     *
+     * @param  mixed $value
+     * @return Zend_Form_Element_Checkbox
      */
-    public function setUseHiddenElement($useHiddenElement)
+    public function setValue($value)
     {
-        $this->useHiddenElement = (bool) $useHiddenElement;
+        if ($value == $this->getCheckedValue()) {
+            parent::setValue($value);
+            $this->checked = true;
+        } else {
+            parent::setValue($this->getUncheckedValue());
+            $this->checked = false;
+        }
         return $this;
     }
 
     /**
-     * Do we render hidden element?
+     * Set checked value
      *
-     * @return bool
+     * @param  string $value
+     * @return Zend_Form_Element_Checkbox
      */
-    public function useHiddenElement()
+    public function setCheckedValue($value)
     {
-        return $this->useHiddenElement;
-    }
-
-    /**
-     * Set the value to use when checkbox is unchecked
-     *
-     * @param $uncheckedValue
-     * @return Checkbox
-     */
-    public function setUncheckedValue($uncheckedValue)
-    {
-        $this->uncheckedValue = $uncheckedValue;
+        $this->_checkedValue = (string) $value;
+        $this->options['checkedValue'] = $value;
         return $this;
     }
 
     /**
-     * Get the value to use when checkbox is unchecked
-     *
-     * @return string
-     */
-    public function getUncheckedValue()
-    {
-        return $this->uncheckedValue;
-    }
-
-    /**
-     * Set the value to use when checkbox is checked
-     *
-     * @param $checkedValue
-     * @return Checkbox
-     */
-    public function setCheckedValue($checkedValue)
-    {
-        $this->checkedValue = $checkedValue;
-        return $this;
-    }
-
-    /**
-     * Get the value to use when checkbox is checked
+     * Get value when checked
      *
      * @return string
      */
     public function getCheckedValue()
     {
-        return $this->checkedValue;
+        return $this->_checkedValue;
     }
 
     /**
-     * Get validator
+     * Set unchecked value
      *
-     * @return ValidatorInterface
+     * @param  string $value
+     * @return Zend_Form_Element_Checkbox
      */
-    protected function getValidator()
+    public function setUncheckedValue($value)
     {
-        if (null === $this->validator) {
-            $this->validator = new InArrayValidator(array(
-                'haystack' => array($this->checkedValue, $this->uncheckedValue),
-                'strict'   => false
-            ));
+        $this->_uncheckedValue = (string) $value;
+        $this->options['uncheckedValue'] = $value;
+        return $this;
+    }
+
+    /**
+     * Get value when not checked
+     *
+     * @return string
+     */
+    public function getUncheckedValue()
+    {
+        return $this->_uncheckedValue;
+    }
+
+    /**
+     * Set checked flag
+     *
+     * @param  bool $flag
+     * @return Zend_Form_Element_Checkbox
+     */
+    public function setChecked($flag)
+    {
+        $this->checked = (bool) $flag;
+        if ($this->checked) {
+            $this->setValue($this->getCheckedValue());
+        } else {
+            $this->setValue($this->getUncheckedValue());
         }
-        return $this->validator;
+        return $this;
     }
 
     /**
-     * Provide default input rules for this element
-     *
-     * Attaches the captcha as a validator.
-     *
-     * @return array
-     */
-    public function getInputSpecification()
-    {
-        $spec = array(
-            'name' => $this->getName(),
-            'required' => true,
-            'validators' => array(
-                $this->getValidator()
-            )
-        );
-
-        return $spec;
-    }
-
-    /**
-     * Checks if this checkbox is checked.
+     * Get checked flag
      *
      * @return bool
      */
     public function isChecked()
     {
-        return (bool) $this->value;
-    }
-
-    /**
-     * Checks or unchecks the checkbox.
-     *
-     * @param bool $value The flag to set.
-     * @return Checkbox
-     */
-    public function setChecked($value)
-    {
-        $this->value = (bool) $value;
-        return $this;
-    }
-
-    /**
-     * Checks or unchecks the checkbox.
-     *
-     * @param mixed $value A boolean flag or string that is checked against the "checked value".
-     * @return Element
-     */
-    public function setValue($value)
-    {
-        if (is_bool($value)) {
-            $this->value = $value;
-        } else {
-            $this->value = $value === $this->getCheckedValue();
-        }
-        return $this;
+        return $this->checked;
     }
 }

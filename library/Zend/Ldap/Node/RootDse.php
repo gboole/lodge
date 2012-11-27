@@ -1,25 +1,40 @@
 <?php
 /**
- * Zend Framework (http://framework.zend.com/)
+ * Zend Framework
  *
- * @link      http://github.com/zendframework/zf2 for the canonical source repository
- * @copyright Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
- * @license   http://framework.zend.com/license/new-bsd New BSD License
- * @package   Zend_Ldap
- */
-
-namespace Zend\Ldap\Node;
-
-use Zend\Ldap;
-
-/**
- * Zend\Ldap\Node\RootDse provides a simple data-container for the RootDse node.
+ * LICENSE
+ *
+ * This source file is subject to the new BSD license that is bundled
+ * with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://framework.zend.com/license/new-bsd
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@zend.com so we can send you a copy immediately.
  *
  * @category   Zend
  * @package    Zend_Ldap
- * @subpackage RootDse
+ * @subpackage RootDSE
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id: RootDse.php 24593 2012-01-05 20:35:02Z matthew $
  */
-class RootDse extends AbstractNode
+
+/**
+ * @see Zend_Ldap_Node_Abstract
+ */
+require_once 'Zend/Ldap/Node/Abstract.php';
+
+/**
+ * Zend_Ldap_Node_RootDse provides a simple data-container for the RootDSE node.
+ *
+ * @category   Zend
+ * @package    Zend_Ldap
+ * @subpackage RootDSE
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ */
+class Zend_Ldap_Node_RootDse extends Zend_Ldap_Node_Abstract
 {
     const SERVER_TYPE_GENERIC         = 1;
     const SERVER_TYPE_OPENLDAP        = 2;
@@ -27,23 +42,35 @@ class RootDse extends AbstractNode
     const SERVER_TYPE_EDIRECTORY      = 4;
 
     /**
-     * Factory method to create the RootDse.
+     * Factory method to create the RootDSE.
      *
-     * @param \Zend\Ldap\Ldap $ldap
-     * @return RootDse
+     * @param  Zend_Ldap $ldap
+     * @return Zend_Ldap_Node_RootDse
+     * @throws Zend_Ldap_Exception
      */
-    public static function create(Ldap\Ldap $ldap)
+    public static function create(Zend_Ldap $ldap)
     {
-        $dn   = Ldap\Dn::fromString('');
+        $dn = Zend_Ldap_Dn::fromString('');
         $data = $ldap->getEntry($dn, array('*', '+'), true);
         if (isset($data['domainfunctionality'])) {
-            return new RootDse\ActiveDirectory($dn, $data);
-        } elseif (isset($data['dsaname'])) {
-            return new RootDse\eDirectory($dn, $data);
-        } elseif (isset($data['structuralobjectclass'])
-            && $data['structuralobjectclass'][0] === 'OpenLDAProotDSE'
-        ) {
-            return new RootDse\OpenLdap($dn, $data);
+            /**
+             * @see Zend_Ldap_Node_RootDse_ActiveDirectory
+             */
+            require_once 'Zend/Ldap/Node/RootDse/ActiveDirectory.php';
+            return new Zend_Ldap_Node_RootDse_ActiveDirectory($dn, $data);
+        } else if (isset($data['dsaname'])) {
+            /**
+             * @see Zend_Ldap_Node_RootDse_ActiveDirectory
+             */
+            require_once 'Zend/Ldap/Node/RootDse/eDirectory.php';
+            return new Zend_Ldap_Node_RootDse_eDirectory($dn, $data);
+        } else if (isset($data['structuralobjectclass']) &&
+                $data['structuralobjectclass'][0] === 'OpenLDAProotDSE') {
+            /**
+             * @see Zend_Ldap_Node_RootDse_OpenLdap
+             */
+            require_once 'Zend/Ldap/Node/RootDse/OpenLdap.php';
+            return new Zend_Ldap_Node_RootDse_OpenLdap($dn, $data);
         } else {
             return new self($dn, $data);
         }
@@ -54,10 +81,10 @@ class RootDse extends AbstractNode
      *
      * Constructor is protected to enforce the use of factory methods.
      *
-     * @param \Zend\Ldap\Dn $dn
-     * @param array         $data
+     * @param  Zend_Ldap_Dn $dn
+     * @param  array        $data
      */
-    protected function __construct(Ldap\Dn $dn, array $data)
+    protected function __construct(Zend_Ldap_Dn $dn, array $data)
     {
         parent::__construct($dn, $data, true);
     }
@@ -117,11 +144,15 @@ class RootDse extends AbstractNode
     /**
      * Returns the schema DN
      *
-     * @return \Zend\Ldap\Dn
+     * @return Zend_Ldap_Dn
      */
     public function getSchemaDn()
     {
         $schemaDn = $this->getSubschemaSubentry();
-        return Ldap\Dn::fromString($schemaDn);
+        /**
+         * @see Zend_Ldap_Dn
+         */
+        require_once 'Zend/Ldap/Dn.php';
+        return Zend_Ldap_Dn::fromString($schemaDn);
     }
 }

@@ -1,16 +1,25 @@
 <?php
 /**
- * Zend Framework (http://framework.zend.com/)
+ * Zend Framework
  *
- * @link      http://github.com/zendframework/zf2 for the canonical source repository
- * @copyright Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
- * @license   http://framework.zend.com/license/new-bsd New BSD License
- * @package   Zend_XmlRpc
+ * LICENSE
+ *
+ * This source file is subject to the new BSD license that is bundled
+ * with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://framework.zend.com/license/new-bsd
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@zend.com so we can send you a copy immediately.
+ *
+ * @category   Zend
+ * @package    Zend_XmlRpc
+ * @subpackage Client
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id: ServerProxy.php 24593 2012-01-05 20:35:02Z matthew $
  */
 
-namespace Zend\XmlRpc\Client;
-
-use Zend\XmlRpc\Client as XMLRPCClient;
 
 /**
  * The namespace decorator enables object chaining to permit
@@ -20,65 +29,67 @@ use Zend\XmlRpc\Client as XMLRPCClient;
  * @category   Zend
  * @package    Zend_XmlRpc
  * @subpackage Client
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
-class ServerProxy
+class Zend_XmlRpc_Client_ServerProxy
 {
     /**
-     * @var \Zend\XmlRpc\Client
+     * @var Zend_XmlRpc_Client
      */
-    private $client = null;
+    private $_client = null;
 
     /**
      * @var string
      */
-    private $namespace = '';
+    private $_namespace = '';
 
 
     /**
-     * @var array of \Zend\XmlRpc\Client\ServerProxy
+     * @var array of Zend_XmlRpc_Client_ServerProxy
      */
-    private $cache = array();
+    private $_cache = array();
 
 
     /**
      * Class constructor
      *
-     * @param \Zend\XmlRpc\Client $client
      * @param string             $namespace
+     * @param Zend_XmlRpc_Client $client
      */
-    public function __construct(XMLRPCClient $client, $namespace = '')
+    public function __construct($client, $namespace = '')
     {
-        $this->client    = $client;
-        $this->namespace = $namespace;
+        $this->_namespace = $namespace;
+        $this->_client    = $client;
     }
 
 
     /**
      * Get the next successive namespace
      *
-     * @param string $namespace
-     * @return \Zend\XmlRpc\Client\ServerProxy
+     * @param string $name
+     * @return Zend_XmlRpc_Client_ServerProxy
      */
     public function __get($namespace)
     {
-        $namespace = ltrim("$this->namespace.$namespace", '.');
-        if (!isset($this->cache[$namespace])) {
-            $this->cache[$namespace] = new $this($this->client, $namespace);
+        $namespace = ltrim("$this->_namespace.$namespace", '.');
+        if (!isset($this->_cache[$namespace])) {
+            $this->_cache[$namespace] = new $this($this->_client, $namespace);
         }
-        return $this->cache[$namespace];
+        return $this->_cache[$namespace];
     }
 
 
     /**
      * Call a method in this namespace.
      *
-     * @param  string $method
+     * @param  string $methodN
      * @param  array $args
      * @return mixed
      */
     public function __call($method, $args)
     {
-        $method = ltrim("{$this->namespace}.{$method}", '.');
-        return $this->client->call($method, $args);
+        $method = ltrim("$this->_namespace.$method", '.');
+        return $this->_client->call($method, $args);
     }
 }

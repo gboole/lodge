@@ -1,79 +1,108 @@
 <?php
 /**
- * Zend Framework (http://framework.zend.com/)
+ * Zend Framework
  *
- * @link      http://github.com/zendframework/zf2 for the canonical source repository
- * @copyright Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
- * @license   http://framework.zend.com/license/new-bsd New BSD License
- * @package   Zend_Log
+ * LICENSE
+ *
+ * This source file is subject to the new BSD license that is bundled
+ * with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://framework.zend.com/license/new-bsd
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@zend.com so we can send you a copy immediately.
+ *
+ * @category   Zend
+ * @package    Zend_Log
+ * @subpackage Formatter
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id: Simple.php 24593 2012-01-05 20:35:02Z matthew $
  */
 
-namespace Zend\Log\Formatter;
-
-use DateTime;
-use Zend\Log\Exception;
+/** Zend_Log_Formatter_Abstract */
+require_once 'Zend/Log/Formatter/Abstract.php';
 
 /**
  * @category   Zend
  * @package    Zend_Log
  * @subpackage Formatter
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id: Simple.php 24593 2012-01-05 20:35:02Z matthew $
  */
-class Simple extends Base
+class Zend_Log_Formatter_Simple extends Zend_Log_Formatter_Abstract
 {
-    const DEFAULT_FORMAT = '%timestamp% %priorityName% (%priority%): %message% %extra%';
-
     /**
-     * Format specifier for log messages
-     *
      * @var string
      */
-    protected $format;
+    protected $_format;
+
+    const DEFAULT_FORMAT = '%timestamp% %priorityName% (%priority%): %message%';
 
     /**
      * Class constructor
      *
-     * @see http://php.net/manual/en/function.date.php
-     * @param null|string $format Format specifier for log messages
-     * @param null|string $dateTimeFormat Format specifier for DateTime objects in event data
-     * @throws Exception\InvalidArgumentException
+     * @param  null|string  $format  Format specifier for log messages
+     * @return void
+     * @throws Zend_Log_Exception
      */
-    public function __construct($format = null, $dateTimeFormat = null)
+    public function __construct($format = null)
     {
-        if (isset($format) && !is_string($format)) {
-            throw new Exception\InvalidArgumentException('Format must be a string');
+        if ($format === null) {
+            $format = self::DEFAULT_FORMAT . PHP_EOL;
         }
 
-        $this->format = isset($format) ? $format : static::DEFAULT_FORMAT;
+        if (!is_string($format)) {
+            require_once 'Zend/Log/Exception.php';
+            throw new Zend_Log_Exception('Format must be a string');
+        }
 
-        parent::__construct($dateTimeFormat);
+        $this->_format = $format;
+    }
+
+    /**
+	 * Factory for Zend_Log_Formatter_Simple classe
+	 *
+	 * @param array|Zend_Config $options
+	 * @return Zend_Log_Formatter_Simple
+     */
+    public static function factory($options)
+    {
+        $format = null;
+        if (null !== $options) {
+            if ($options instanceof Zend_Config) {
+                $options = $options->toArray();
+            }
+
+            if (array_key_exists('format', $options)) {
+                $format = $options['format'];
+            }
+        }
+
+        return new self($format);
     }
 
     /**
      * Formats data into a single line to be written by the writer.
      *
-     * @param array $event event data
-     * @return string formatted line to write to the log
+     * @param  array    $event    event data
+     * @return string             formatted line to write to the log
      */
     public function format($event)
     {
-        $output = $this->format;
+        $output = $this->_format;
 
-        $event = parent::format($event);
         foreach ($event as $name => $value) {
-            if ('extra' == $name && count($value)) {
-                $value = $this->normalize($value);
-            } elseif ('extra' == $name) {
-                // Don't print an empty array
-                $value = '';
+            if ((is_object($value) && !method_exists($value,'__toString'))
+                || is_array($value)
+            ) {
+                $value = gettype($value);
             }
+
             $output = str_replace("%$name%", $value, $output);
         }
 
-        if (isset($event['extra']) && empty($event['extra'])
-            && false !== strpos($this->format, '%extra%')
-        ) {
-            $output = rtrim($output, ' ');
-        }
         return $output;
     }
 }

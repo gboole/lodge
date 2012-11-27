@@ -1,26 +1,41 @@
 <?php
 /**
- * Zend Framework (http://framework.zend.com/)
+ * Zend Framework
  *
- * @link      http://github.com/zendframework/zf2 for the canonical source repository
- * @copyright Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
- * @license   http://framework.zend.com/license/new-bsd New BSD License
- * @package   Zend_Ldap
- */
-
-namespace Zend\Ldap\Node\RootDse;
-
-use Zend\Ldap\Node;
-
-/**
- * Zend\Ldap\Node\RootDse\OpenLdap provides a simple data-container for the
- * RootDse node of an OpenLDAP server.
+ * LICENSE
+ *
+ * This source file is subject to the new BSD license that is bundled
+ * with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://framework.zend.com/license/new-bsd
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@zend.com so we can send you a copy immediately.
  *
  * @category   Zend
  * @package    Zend_Ldap
- * @subpackage RootDse
+ * @subpackage RootDSE
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id: OpenLdap.php 24593 2012-01-05 20:35:02Z matthew $
  */
-class OpenLdap extends Node\RootDse
+
+/**
+ * @see Zend_Ldap_Node_RootDse
+ */
+require_once 'Zend/Ldap/Node/RootDse.php';
+
+/**
+ * Zend_Ldap_Node_RootDse provides a simple data-container for the RootDSE node of
+ * an OpenLDAP server.
+ *
+ * @category   Zend
+ * @package    Zend_Ldap
+ * @subpackage RootDSE
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ */
+class Zend_Ldap_Node_RootDse_OpenLdap extends Zend_Ldap_Node_RootDse
 {
     /**
      * Gets the configContext.

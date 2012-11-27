@@ -1,42 +1,57 @@
 <?php
 /**
- * Zend Framework (http://framework.zend.com/)
+ * Zend Framework
  *
- * @link      http://github.com/zendframework/zf2 for the canonical source repository
- * @copyright Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
- * @license   http://framework.zend.com/license/new-bsd New BSD License
- * @package   Zend_Ldap
- */
-
-namespace Zend\Ldap\Node;
-
-use Zend\Ldap;
-
-/**
- * Zend\Ldap\Node\ChildrenIterator provides an iterator to a collection of children nodes.
+ * LICENSE
+ *
+ * This source file is subject to the new BSD license that is bundled
+ * with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://framework.zend.com/license/new-bsd
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@zend.com so we can send you a copy immediately.
  *
  * @category   Zend
  * @package    Zend_Ldap
  * @subpackage Node
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id: ChildrenIterator.php 24593 2012-01-05 20:35:02Z matthew $
  */
-class ChildrenIterator implements \Iterator, \Countable, \RecursiveIterator, \ArrayAccess
+
+/**
+ * @see Zend_Ldap_Node
+ */
+require_once 'Zend/Ldap/Node.php';
+
+/**
+ * Zend_Ldap_Node_ChildrenIterator provides an iterator to a collection of children nodes.
+ *
+ * @category   Zend
+ * @package    Zend_Ldap
+ * @subpackage Node
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ */
+class Zend_Ldap_Node_ChildrenIterator implements Iterator, Countable, RecursiveIterator, ArrayAccess
 {
     /**
-     * An array of Zend\Ldap\Node objects
+     * An array of Zend_Ldap_Node objects
      *
      * @var array
      */
-    private $data;
+    private $_data;
 
     /**
      * Constructor.
      *
-     * @param array $data
-     * @return \Zend\Ldap\Node\ChildrenIterator
+     * @param  array $data
+     * @return void
      */
     public function __construct(array $data)
     {
-        $this->data = $data;
+        $this->_data = $data;
     }
 
     /**
@@ -47,18 +62,18 @@ class ChildrenIterator implements \Iterator, \Countable, \RecursiveIterator, \Ar
      */
     public function count()
     {
-        return count($this->data);
+        return count($this->_data);
     }
 
     /**
      * Return the current child.
      * Implements Iterator
      *
-     * @return \Zend\Ldap\Node
+     * @return Zend_Ldap_Node
      */
     public function current()
     {
-        return current($this->data);
+        return current($this->_data);
     }
 
     /**
@@ -69,7 +84,7 @@ class ChildrenIterator implements \Iterator, \Countable, \RecursiveIterator, \Ar
      */
     public function key()
     {
-        return key($this->data);
+        return key($this->_data);
     }
 
     /**
@@ -78,7 +93,7 @@ class ChildrenIterator implements \Iterator, \Countable, \RecursiveIterator, \Ar
      */
     public function next()
     {
-        next($this->data);
+        next($this->_data);
     }
 
     /**
@@ -87,7 +102,7 @@ class ChildrenIterator implements \Iterator, \Countable, \RecursiveIterator, \Ar
      */
     public function rewind()
     {
-        reset($this->data);
+        reset($this->_data);
     }
 
     /**
@@ -99,7 +114,7 @@ class ChildrenIterator implements \Iterator, \Countable, \RecursiveIterator, \Ar
      */
     public function valid()
     {
-        return (current($this->data) !== false);
+        return (current($this->_data)!==false);
     }
 
     /**
@@ -110,7 +125,7 @@ class ChildrenIterator implements \Iterator, \Countable, \RecursiveIterator, \Ar
      */
     public function hasChildren()
     {
-        if ($this->current() instanceof Ldap\Node) {
+        if ($this->current() instanceof Zend_Ldap_Node) {
             return $this->current()->hasChildren();
         } else {
             return false;
@@ -120,11 +135,11 @@ class ChildrenIterator implements \Iterator, \Countable, \RecursiveIterator, \Ar
     /**
      * Returns the children for the current node.
      *
-     * @return ChildrenIterator
+     * @return Zend_Ldap_Node_ChildrenIterator
      */
     public function getChildren()
     {
-        if ($this->current() instanceof Ldap\Node) {
+        if ($this->current() instanceof Zend_Ldap_Node) {
             return $this->current()->getChildren();
         } else {
             return null;
@@ -136,12 +151,12 @@ class ChildrenIterator implements \Iterator, \Countable, \RecursiveIterator, \Ar
      * Implements ArrayAccess.
      *
      * @param  string $rdn
-     * @return array|null
+     * @return Zend_Ldap_node
      */
     public function offsetGet($rdn)
     {
         if ($this->offsetExists($rdn)) {
-            return $this->data[$rdn];
+            return $this->_data[$rdn];
         } else {
             return null;
         }
@@ -156,17 +171,7 @@ class ChildrenIterator implements \Iterator, \Countable, \RecursiveIterator, \Ar
      */
     public function offsetExists($rdn)
     {
-        return (array_key_exists($rdn, $this->data));
-    }
-
-    /**
-     * Does nothing.
-     * Implements ArrayAccess.
-     *
-     * @param $name
-     */
-    public function offsetUnset($name)
-    {
+        return (array_key_exists($rdn, $this->_data));
     }
 
     /**
@@ -174,11 +179,19 @@ class ChildrenIterator implements \Iterator, \Countable, \RecursiveIterator, \Ar
      * Implements ArrayAccess.
      *
      * @param  string $name
-     * @param         $value
+     * @return null
      */
-    public function offsetSet($name, $value)
-    {
-    }
+    public function offsetUnset($name) { }
+
+    /**
+     * Does nothing.
+     * Implements ArrayAccess.
+     *
+     * @param  string $name
+     * @param  mixed $value
+     * @return null
+     */
+    public function offsetSet($name, $value) { }
 
     /**
      * Get all children as an array

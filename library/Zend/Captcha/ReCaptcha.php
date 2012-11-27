@@ -1,17 +1,29 @@
 <?php
 /**
- * Zend Framework (http://framework.zend.com/)
+ * Zend Framework
  *
- * @link      http://github.com/zendframework/zf2 for the canonical source repository
- * @copyright Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
- * @license   http://framework.zend.com/license/new-bsd New BSD License
- * @package   Zend_Captcha
+ * LICENSE
+ *
+ * This source file is subject to the new BSD license that is bundled
+ * with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://framework.zend.com/license/new-bsd
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@zend.com so we can send you a copy immediately.
+ *
+ * @category   Zend
+ * @package    Zend_Captcha
+ * @subpackage Adapter
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 
-namespace Zend\Captcha;
+/** @see Zend_Captcha_Base */
+require_once 'Zend/Captcha/Base.php';
 
-use Traversable;
-use ZendService\ReCaptcha\ReCaptcha as ReCaptchaService;
+/** @see Zend_Service_ReCaptcha */
+require_once 'Zend/Service/ReCaptcha.php';
 
 /**
  * ReCaptcha adapter
@@ -23,37 +35,40 @@ use ZendService\ReCaptcha\ReCaptcha as ReCaptchaService;
  * @category   Zend
  * @package    Zend_Captcha
  * @subpackage Adapter
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id: ReCaptcha.php 24593 2012-01-05 20:35:02Z matthew $
  */
-class ReCaptcha extends AbstractAdapter
+class Zend_Captcha_ReCaptcha extends Zend_Captcha_Base
 {
     /**@+
      * ReCaptcha Field names
      * @var string
      */
-    protected $CHALLENGE = 'recaptcha_challenge_field';
-    protected $RESPONSE  = 'recaptcha_response_field';
+    protected $_CHALLENGE = 'recaptcha_challenge_field';
+    protected $_RESPONSE  = 'recaptcha_response_field';
     /**@-*/
 
     /**
      * Recaptcha service object
      *
-     * @var ReCaptchaService
+     * @var Zend_Service_Recaptcha
      */
-    protected $service;
+    protected $_service;
 
     /**
      * Parameters defined by the service
      *
      * @var array
      */
-    protected $serviceParams = array();
+    protected $_serviceParams = array();
 
     /**
      * Options defined by the service
      *
      * @var array
      */
-    protected $serviceOptions = array();
+    protected $_serviceOptions = array();
 
     /**#@+
      * Error codes
@@ -67,7 +82,7 @@ class ReCaptcha extends AbstractAdapter
      * Error messages
      * @var array
      */
-    protected $messageTemplates = array(
+    protected $_messageTemplates = array(
         self::MISSING_VALUE => 'Missing captcha fields',
         self::ERR_CAPTCHA   => 'Failed to validate captcha',
         self::BAD_CAPTCHA   => 'Captcha value is wrong: %value%',
@@ -96,8 +111,8 @@ class ReCaptcha extends AbstractAdapter
     /**
      * Set ReCaptcha Private key
      *
-     * @param  string $privkey
-     * @return ReCaptcha
+     * @param string $privkey
+     * @return Zend_Captcha_ReCaptcha
      */
     public function setPrivkey($privkey)
     {
@@ -108,8 +123,8 @@ class ReCaptcha extends AbstractAdapter
     /**
      * Set ReCaptcha public key
      *
-     * @param  string $pubkey
-     * @return ReCaptcha
+     * @param string $pubkey
+     * @return Zend_Captcha_ReCaptcha
      */
     public function setPubkey($pubkey)
     {
@@ -120,16 +135,20 @@ class ReCaptcha extends AbstractAdapter
     /**
      * Constructor
      *
-     * @param  null|array|Traversable $options
+     * @param  array|Zend_Config $options
+     * @return void
      */
     public function __construct($options = null)
     {
-        $this->setService(new ReCaptchaService());
-        $this->serviceParams  = $this->getService()->getParams();
-        $this->serviceOptions = $this->getService()->getOptions();
+        $this->setService(new Zend_Service_ReCaptcha());
+        $this->_serviceParams = $this->getService()->getParams();
+        $this->_serviceOptions = $this->getService()->getOptions();
 
         parent::__construct($options);
 
+        if ($options instanceof Zend_Config) {
+            $options = $options->toArray();
+        }
         if (!empty($options)) {
             $this->setOptions($options);
         }
@@ -138,23 +157,23 @@ class ReCaptcha extends AbstractAdapter
     /**
      * Set service object
      *
-     * @param  ReCaptchaService $service
-     * @return ReCaptcha
+     * @param  Zend_Service_ReCaptcha $service
+     * @return Zend_Captcha_ReCaptcha
      */
-    public function setService(ReCaptchaService $service)
+    public function setService(Zend_Service_ReCaptcha $service)
     {
-        $this->service = $service;
+        $this->_service = $service;
         return $this;
     }
 
     /**
      * Retrieve ReCaptcha service object
      *
-     * @return ReCaptchaService
+     * @return Zend_Service_ReCaptcha
      */
     public function getService()
     {
-        return $this->service;
+        return $this->_service;
     }
 
     /**
@@ -165,16 +184,16 @@ class ReCaptcha extends AbstractAdapter
      *
      * @param  string $key
      * @param  mixed $value
-     * @return ReCaptcha
+     * @return Zend_Captcha_ReCaptcha
      */
     public function setOption($key, $value)
     {
         $service = $this->getService();
-        if (isset($this->serviceParams[$key])) {
+        if (isset($this->_serviceParams[$key])) {
             $service->setParam($key, $value);
             return $this;
         }
-        if (isset($this->serviceOptions[$key])) {
+        if (isset($this->_serviceOptions[$key])) {
             $service->setOption($key, $value);
             return $this;
         }
@@ -184,7 +203,7 @@ class ReCaptcha extends AbstractAdapter
     /**
      * Generate captcha
      *
-     * @see AbstractAdapter::generate()
+     * @see Zend_Form_Captcha_Adapter::generate()
      * @return string
      */
     public function generate()
@@ -195,15 +214,14 @@ class ReCaptcha extends AbstractAdapter
     /**
      * Validate captcha
      *
-     * @see    \Zend\Validator\ValidatorInterface::isValid()
+     * @see    Zend_Validate_Interface::isValid()
      * @param  mixed $value
-     * @param  mixed $context
      * @return boolean
      */
     public function isValid($value, $context = null)
     {
         if (!is_array($value) && !is_array($context)) {
-            $this->error(self::MISSING_VALUE);
+            $this->_error(self::MISSING_VALUE);
             return false;
         }
 
@@ -211,22 +229,22 @@ class ReCaptcha extends AbstractAdapter
             $value = $context;
         }
 
-        if (empty($value[$this->CHALLENGE]) || empty($value[$this->RESPONSE])) {
-            $this->error(self::MISSING_VALUE);
+        if (empty($value[$this->_CHALLENGE]) || empty($value[$this->_RESPONSE])) {
+            $this->_error(self::MISSING_VALUE);
             return false;
         }
 
         $service = $this->getService();
 
-        $res = $service->verify($value[$this->CHALLENGE], $value[$this->RESPONSE]);
+        $res = $service->verify($value[$this->_CHALLENGE], $value[$this->_RESPONSE]);
 
         if (!$res) {
-            $this->error(self::ERR_CAPTCHA);
+            $this->_error(self::ERR_CAPTCHA);
             return false;
         }
 
         if (!$res->isValid()) {
-            $this->error(self::BAD_CAPTCHA, $res->getErrorCode());
+            $this->_error(self::BAD_CAPTCHA, $res->getErrorCode());
             $service->setParam('error', $res->getErrorCode());
             return false;
         }
@@ -235,12 +253,28 @@ class ReCaptcha extends AbstractAdapter
     }
 
     /**
-     * Get helper name used to render captcha
+     * Render captcha
+     *
+     * @param  Zend_View_Interface $view
+     * @param  mixed $element
+     * @return string
+     */
+    public function render(Zend_View_Interface $view = null, $element = null)
+    {
+        $name = null;
+        if ($element instanceof Zend_Form_Element) {
+            $name = $element->getBelongsTo();
+        }
+        return $this->getService()->getHTML($name);
+    }
+
+    /**
+     * Get captcha decorator
      *
      * @return string
      */
-    public function getHelperName()
+    public function getDecorator()
     {
-        return "captcha/recaptcha";
+        return "Captcha_ReCaptcha";
     }
 }

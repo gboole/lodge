@@ -1,18 +1,27 @@
 <?php
 /**
- * Zend Framework (http://framework.zend.com/)
+ * Zend Framework
  *
- * @link      http://github.com/zendframework/zf2 for the canonical source repository
- * @copyright Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
- * @license   http://framework.zend.com/license/new-bsd New BSD License
- * @package   Zend_XmlRpc
+ * LICENSE
+ *
+ * This source file is subject to the new BSD license that is bundled
+ * with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://framework.zend.com/license/new-bsd
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@zend.com so we can send you a copy immediately.
+ *
+ * @category   Zend
+ * @package    Zend_Controller
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 
-namespace Zend\XmlRpc\Request;
-
-use Zend\Stdlib\ErrorHandler;
-use Zend\XmlRpc\Fault;
-use Zend\XmlRpc\Request as XmlRpcRequest;
+/**
+ * Zend_XmlRpc_Request
+ */
+require_once 'Zend/XmlRpc/Request.php';
 
 /**
  * XmlRpc Request object -- Request via HTTP
@@ -21,22 +30,25 @@ use Zend\XmlRpc\Request as XmlRpcRequest;
  * built at construction time using a raw POST; if no data is available, the
  * request is declared a fault.
  *
- * @category   Zend
- * @package    Zend_XmlRpc
+ * @category Zend
+ * @package  Zend_XmlRpc
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version $Id: Http.php 24593 2012-01-05 20:35:02Z matthew $
  */
-class Http extends XmlRpcRequest
+class Zend_XmlRpc_Request_Http extends Zend_XmlRpc_Request
 {
     /**
      * Array of headers
      * @var array
      */
-    protected $headers;
+    protected $_headers;
 
     /**
      * Raw XML as received via request
      * @var string
      */
-    protected $xml;
+    protected $_xml;
 
     /**
      * Constructor
@@ -45,18 +57,18 @@ class Http extends XmlRpcRequest
      * occurs in doing so, or if the XML is invalid, the request is declared a
      * fault.
      *
+     * @return void
      */
     public function __construct()
     {
-        ErrorHandler::start();
-        $xml = file_get_contents('php://input');
-        ErrorHandler::stop();
+        $xml = @file_get_contents('php://input');
         if (!$xml) {
-            $this->fault = new Fault(630);
+            require_once 'Zend/XmlRpc/Fault.php';
+            $this->_fault = new Zend_XmlRpc_Fault(630);
             return;
         }
 
-        $this->xml = $xml;
+        $this->_xml = $xml;
 
         $this->loadXml($xml);
     }
@@ -68,7 +80,7 @@ class Http extends XmlRpcRequest
      */
     public function getRawRequest()
     {
-        return $this->xml;
+        return $this->_xml;
     }
 
     /**
@@ -80,17 +92,17 @@ class Http extends XmlRpcRequest
      */
     public function getHeaders()
     {
-        if (null === $this->headers) {
-            $this->headers = array();
+        if (null === $this->_headers) {
+            $this->_headers = array();
             foreach ($_SERVER as $key => $value) {
                 if ('HTTP_' == substr($key, 0, 5)) {
                     $header = str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', substr($key, 5)))));
-                    $this->headers[$header] = $value;
+                    $this->_headers[$header] = $value;
                 }
             }
         }
 
-        return $this->headers;
+        return $this->_headers;
     }
 
     /**
@@ -105,7 +117,7 @@ class Http extends XmlRpcRequest
             $request .= $key . ': ' . $value . "\n";
         }
 
-        $request .= $this->xml;
+        $request .= $this->_xml;
 
         return $request;
     }

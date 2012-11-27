@@ -1,23 +1,29 @@
 <?php
 /**
- * Zend Framework (http://framework.zend.com/)
+ * Zend Framework
  *
- * @link      http://github.com/zendframework/zf2 for the canonical source repository
- * @copyright Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
- * @license   http://framework.zend.com/license/new-bsd New BSD License
- * @package   Zend_View
+ * LICENSE
+ *
+ * This source file is subject to the new BSD license that is bundled
+ * with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://framework.zend.com/license/new-bsd
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@zend.com so we can send you a copy immediately.
+ *
+ * @category   Zend
+ * @package    Zend_View
+ * @subpackage Helper
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id: Links.php 24593 2012-01-05 20:35:02Z matthew $
  */
 
-namespace Zend\View\Helper\Navigation;
-
-use RecursiveIteratorIterator;
-use Traversable;
-use Zend\Navigation\AbstractContainer;
-use Zend\Navigation\Page\AbstractPage;
-use Zend\Stdlib\ArrayUtils;
-use Zend\Stdlib\ErrorHandler;
-use Zend\View;
-use Zend\View\Exception;
+/**
+ * @see Zend_View_Helper_Navigation_HelperAbstract
+ */
+require_once 'Zend/View/Helper/Navigation/HelperAbstract.php';
 
 /**
  * Helper for printing <link> elements
@@ -25,8 +31,11 @@ use Zend\View\Exception;
  * @category   Zend
  * @package    Zend_View
  * @subpackage Helper
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
-class Links extends AbstractHelper
+class Zend_View_Helper_Navigation_Links
+    extends Zend_View_Helper_Navigation_HelperAbstract
 {
     /**#@+
      * Constants used for specifying which link types to find and render
@@ -57,7 +66,7 @@ class Links extends AbstractHelper
      *
      * @var array
      */
-    protected static $RELATIONS = array(
+    protected static $_RELATIONS = array(
         self::RENDER_ALTERNATE  => 'alternate',
         self::RENDER_STYLESHEET => 'stylesheet',
         self::RENDER_START      => 'start',
@@ -72,7 +81,7 @@ class Links extends AbstractHelper
         self::RENDER_SUBSECTION => 'subsection',
         self::RENDER_APPENDIX   => 'appendix',
         self::RENDER_HELP       => 'help',
-        self::RENDER_BOOKMARK   => 'bookmark',
+        self::RENDER_BOOKMARK   => 'bookmark'
     );
 
     /**
@@ -82,7 +91,7 @@ class Links extends AbstractHelper
      * @see setRenderFlag()
      * @var int
      */
-    protected $renderFlag = self::RENDER_ALL;
+    protected $_renderFlag = self::RENDER_ALL;
 
     /**
      * Root container
@@ -92,17 +101,20 @@ class Links extends AbstractHelper
      *
      * @see _findRoot()
      *
-     * @var AbstractContainer
+     * @var Zend_Navigation_Container
      */
-    protected $root;
+    protected $_root;
 
     /**
-     * Helper entry point
+     * View helper entry point:
+     * Retrieves helper and optionally sets container to operate on
      *
-     * @param  string|AbstractContainer $container container to operate on
-     * @return Links
+     * @param  Zend_Navigation_Container $container  [optional] container to
+     *                                               operate on
+     * @return Zend_View_Helper_Navigation_Links     fluent interface, returns
+     *                                               self
      */
-    public function __invoke($container = null)
+    public function links(Zend_Navigation_Container $container = null)
     {
         if (null !== $container) {
             $this->setContainer($container);
@@ -124,15 +136,11 @@ class Links extends AbstractHelper
      *
      * @param  string $method             method name
      * @param  array  $arguments          method arguments
-     * @return mixed
-     * @throws Exception\ExceptionInterface  if method does not exist in container
+     * @throws Zend_Navigation_Exception  if method does not exist in container
      */
     public function __call($method, array $arguments = array())
     {
-        ErrorHandler::start(E_WARNING);
-        $result = preg_match('/find(Rel|Rev)(.+)/', $method, $match);
-        ErrorHandler::stop();
-        if ($result) {
+        if (@preg_match('/find(Rel|Rev)(.+)/', $method, $match)) {
             return $this->findRelation($arguments[0],
                                        strtolower($match[1]),
                                        strtolower($match[2]));
@@ -140,6 +148,8 @@ class Links extends AbstractHelper
 
         return parent::__call($method, $arguments);
     }
+
+    // Accessors:
 
     /**
      * Sets the helper's render flag
@@ -149,29 +159,31 @@ class Links extends AbstractHelper
      * the render constants. Examples:
      * <code>
      * // render all links except glossary
-     * $flag = Links:RENDER_ALL ^ Links:RENDER_GLOSSARY;
+     * $flag = Zend_View_Helper_Navigation_Links:RENDER_ALL ^
+     *         Zend_View_Helper_Navigation_Links:RENDER_GLOSSARY;
      * $helper->setRenderFlag($flag);
      *
      * // render only chapters and sections
-     * $flag = Links:RENDER_CHAPTER | Links:RENDER_SECTION;
+     * $flag = Zend_View_Helper_Navigation_Links:RENDER_CHAPTER |
+     *         Zend_View_Helper_Navigation_Links:RENDER_SECTION;
      * $helper->setRenderFlag($flag);
      *
      * // render only relations that are not native W3C relations
-     * $helper->setRenderFlag(Links:RENDER_CUSTOM);
+     * $helper->setRenderFlag(Zend_View_Helper_Navigation_Links:RENDER_CUSTOM);
      *
      * // render all relations (default)
-     * $helper->setRenderFlag(Links:RENDER_ALL);
+     * $helper->setRenderFlag(Zend_View_Helper_Navigation_Links:RENDER_ALL);
      * </code>
      *
      * Note that custom relations can also be rendered directly using the
      * {@link renderLink()} method.
      *
-     * @param  int $renderFlag render flag
-     * @return Links  fluent interface, returns self
+     * @param  int $renderFlag                    render flag
+     * @return Zend_View_Helper_Navigation_Links  fluent interface, returns self
      */
     public function setRenderFlag($renderFlag)
     {
-        $this->renderFlag = (int) $renderFlag;
+        $this->_renderFlag = (int) $renderFlag;
         return $this;
     }
 
@@ -182,7 +194,7 @@ class Links extends AbstractHelper
      */
     public function getRenderFlag()
     {
-        return $this->renderFlag;
+        return $this->_renderFlag;
     }
 
     // Finder methods:
@@ -207,33 +219,31 @@ class Links extends AbstractHelper
      * );
      * </code>
      *
-     * @param  AbstractPage $page  page to find links for
-     * @param null|int $flag
-     * @return array related pages
+     * @param  Zend_Navigation_Page $page  page to find links for
+     * @return array                       related pages
      */
-    public function findAllRelations(AbstractPage $page, $flag = null)
+    public function findAllRelations(Zend_Navigation_Page $page,
+                                     $flag = null)
     {
         if (!is_int($flag)) {
             $flag = self::RENDER_ALL;
         }
 
         $result = array('rel' => array(), 'rev' => array());
-        $native = array_values(self::$RELATIONS);
+        $native = array_values(self::$_RELATIONS);
 
         foreach (array_keys($result) as $rel) {
             $meth = 'getDefined' . ucfirst($rel);
             $types = array_merge($native, array_diff($page->$meth(), $native));
 
             foreach ($types as $type) {
-                if (!$relFlag = array_search($type, self::$RELATIONS)) {
+                if (!$relFlag = array_search($type, self::$_RELATIONS)) {
                     $relFlag = self::RENDER_CUSTOM;
                 }
                 if (!($flag & $relFlag)) {
                     continue;
                 }
-
-                $found = $this->findRelation($page, $rel, $type);
-                if ($found) {
+                if ($found = $this->findRelation($page, $rel, $type)) {
                     if (!is_array($found)) {
                         $found = array($found);
                     }
@@ -251,23 +261,25 @@ class Links extends AbstractHelper
      * This method will first look for relations in the page instance, then
      * by searching the root container if nothing was found in the page.
      *
-     * @param  AbstractPage        $page        page to find relations for
+     * @param  Zend_Navigation_Page $page       page to find relations for
      * @param  string              $rel         relation, "rel" or "rev"
      * @param  string              $type        link type, e.g. 'start', 'next'
-     * @return AbstractPage|array|null  page(s), or null if not found
-     * @throws Exception\DomainException if $rel is not "rel" or "rev"
+     * @return Zend_Navigaiton_Page|array|null  page(s), or null if not found
+     * @throws Zend_View_Exception              if $rel is not "rel" or "rev"
      */
-    public function findRelation(AbstractPage $page, $rel, $type)
+    public function findRelation(Zend_Navigation_Page $page, $rel, $type)
     {
         if (!in_array($rel, array('rel', 'rev'))) {
-            throw new Exception\DomainException(sprintf(
+            require_once 'Zend/View/Exception.php';
+            $e = new Zend_View_Exception(sprintf(
                 'Invalid argument: $rel must be "rel" or "rev"; "%s" given',
-                $rel
-            ));
+                $rel));
+            $e->setView($this->view);
+            throw $e;
         }
 
-        if (!$result = $this->findFromProperty($page, $rel, $type)) {
-            $result = $this->findFromSearch($page, $rel, $type);
+        if (!$result = $this->_findFromProperty($page, $rel, $type)) {
+            $result = $this->_findFromSearch($page, $rel, $type);
         }
 
         return $result;
@@ -277,18 +289,16 @@ class Links extends AbstractHelper
      * Finds relations of given $type for $page by checking if the
      * relation is specified as a property of $page
      *
-     * @param  AbstractPage        $page        page to find relations for
+     * @param  Zend_Navigation_Page $page       page to find relations for
      * @param  string              $rel         relation, 'rel' or 'rev'
      * @param  string              $type        link type, e.g. 'start', 'next'
-     * @return AbstractPage|array|null  page(s), or null if not found
+     * @return Zend_Navigation_Page|array|null  page(s), or null if not found
      */
-    protected function findFromProperty(AbstractPage $page, $rel, $type)
+    protected function _findFromProperty(Zend_Navigation_Page $page, $rel, $type)
     {
         $method = 'get' . ucfirst($rel);
-        $result = $page->$method($type);
-        if ($result) {
-            $result = $this->convertToPages($result);
-            if ($result) {
+        if ($result = $page->$method($type)) {
+            if ($result = $this->_convertToPages($result)) {
                 if (!is_array($result)) {
                     $result = array($result);
                 }
@@ -310,12 +320,12 @@ class Links extends AbstractHelper
      * Finds relations of given $rel=$type for $page by using the helper to
      * search for the relation in the root container
      *
-     * @param  AbstractPage        $page   page to find relations for
+     * @param  Zend_Navigation_Page $page  page to find relations for
      * @param  string              $rel    relation, 'rel' or 'rev'
      * @param  string              $type   link type, e.g. 'start', 'next', etc
      * @return array|null                  array of pages, or null if not found
      */
-    protected function findFromSearch(AbstractPage $page, $rel, $type)
+    protected function _findFromSearch(Zend_Navigation_Page $page, $rel, $type)
     {
         $found = null;
 
@@ -338,13 +348,13 @@ class Links extends AbstractHelper
      * tells search engines which document is considered by the author to be the
      * starting point of the collection.
      *
-     * @param  AbstractPage $page  page to find relation for
-     * @return AbstractPage|null   page or null
+     * @param  Zend_Navigation_Page $page  page to find relation for
+     * @return Zend_Navigation_Page|null   page or null
      */
-    public function searchRelStart(AbstractPage $page)
+    public function searchRelStart(Zend_Navigation_Page $page)
     {
-        $found = $this->findRoot($page);
-        if (!$found instanceof AbstractPage) {
+        $found = $this->_findRoot($page);
+        if (!$found instanceof Zend_Navigation_Page) {
             $found->rewind();
             $found = $found->current();
         }
@@ -365,14 +375,14 @@ class Links extends AbstractHelper
      * agents may choose to preload the "next" document, to reduce the perceived
      * load time.
      *
-     * @param  AbstractPage $page  page to find relation for
-     * @return AbstractPage|null   page(s) or null
+     * @param  Zend_Navigation_Page $page  page to find relation for
+     * @return Zend_Navigation_Page|null   page(s) or null
      */
-    public function searchRelNext(AbstractPage $page)
+    public function searchRelNext(Zend_Navigation_Page $page)
     {
         $found = null;
         $break = false;
-        $iterator = new RecursiveIteratorIterator($this->findRoot($page),
+        $iterator = new RecursiveIteratorIterator($this->_findRoot($page),
                 RecursiveIteratorIterator::SELF_FIRST);
         foreach ($iterator as $intermediate) {
             if ($intermediate === $page) {
@@ -398,15 +408,15 @@ class Links extends AbstractHelper
      * Refers to the previous document in an ordered series of documents. Some
      * user agents also support the synonym "Previous".
      *
-     * @param  AbstractPage $page  page to find relation for
-     * @return AbstractPage|null   page or null
+     * @param  Zend_Navigation_Page $page  page to find relation for
+     * @return Zend_Navigation_Page|null   page or null
      */
-    public function searchRelPrev(AbstractPage $page)
+    public function searchRelPrev(Zend_Navigation_Page $page)
     {
         $found = null;
         $prev = null;
         $iterator = new RecursiveIteratorIterator(
-                $this->findRoot($page),
+                $this->_findRoot($page),
                 RecursiveIteratorIterator::SELF_FIRST);
         foreach ($iterator as $intermediate) {
             if (!$this->accept($intermediate)) {
@@ -430,15 +440,15 @@ class Links extends AbstractHelper
      * From {@link http://www.w3.org/TR/html4/types.html#type-links}:
      * Refers to a document serving as a chapter in a collection of documents.
      *
-     * @param  AbstractPage $page       page to find relation for
-     * @return AbstractPage|array|null  page(s) or null
+     * @param  Zend_Navigation_Page $page       page to find relation for
+     * @return Zend_Navigation_Page|array|null  page(s) or null
      */
-    public function searchRelChapter(AbstractPage $page)
+    public function searchRelChapter(Zend_Navigation_Page $page)
     {
         $found = array();
 
         // find first level of pages
-        $root = $this->findRoot($page);
+        $root = $this->_findRoot($page);
 
         // find start page(s)
         $start = $this->findRelation($page, 'rel', 'start');
@@ -472,15 +482,15 @@ class Links extends AbstractHelper
      * From {@link http://www.w3.org/TR/html4/types.html#type-links}:
      * Refers to a document serving as a section in a collection of documents.
      *
-     * @param  AbstractPage $page       page to find relation for
-     * @return AbstractPage|array|null  page(s) or null
+     * @param  Zend_Navigation_Page $page       page to find relation for
+     * @return Zend_Navigation_Page|array|null  page(s) or null
      */
-    public function searchRelSection(AbstractPage $page)
+    public function searchRelSection(Zend_Navigation_Page $page)
     {
         $found = array();
 
         // check if given page has pages and is a chapter page
-        if ($page->hasPages() && $this->findRoot($page)->hasPage($page)) {
+        if ($page->hasPages() && $this->_findRoot($page)->hasPage($page)) {
             foreach ($page as $section) {
                 if ($this->accept($section)) {
                     $found[] = $section;
@@ -506,16 +516,16 @@ class Links extends AbstractHelper
      * Refers to a document serving as a subsection in a collection of
      * documents.
      *
-     * @param  AbstractPage $page       page to find relation for
-     * @return AbstractPage|array|null  page(s) or null
+     * @param  Zend_Navigation_Page $page       page to find relation for
+     * @return Zend_Navigation_Page|array|null  page(s) or null
      */
-    public function searchRelSubsection(AbstractPage $page)
+    public function searchRelSubsection(Zend_Navigation_Page $page)
     {
         $found = array();
 
         if ($page->hasPages()) {
             // given page has child pages, loop chapters
-            foreach ($this->findRoot($page) as $chapter) {
+            foreach ($this->_findRoot($page) as $chapter) {
                 // is page a section?
                 if ($chapter->hasPage($page)) {
                     foreach ($page as $subsection) {
@@ -544,16 +554,16 @@ class Links extends AbstractHelper
      * From {@link http://www.w3.org/TR/html4/types.html#type-links}:
      * Refers to a document serving as a section in a collection of documents.
      *
-     * @param  AbstractPage $page  page to find relation for
-     * @return AbstractPage|null   page(s) or null
+     * @param  Zend_Navigation_Page $page  page to find relation for
+     * @return Zend_Navigation_Page|null   page(s) or null
      */
-    public function searchRevSection(AbstractPage $page)
+    public function searchRevSection(Zend_Navigation_Page $page)
     {
-        $found  = null;
-        $parent = $page->getParent();
-        if ($parent) {
-            if ($parent instanceof AbstractPage &&
-                $this->findRoot($page)->hasPage($parent)) {
+        $found = null;
+
+        if ($parent = $page->getParent()) {
+            if ($parent instanceof Zend_Navigation_Page &&
+                $this->_findRoot($page)->hasPage($parent)) {
                 $found = $parent;
             }
         }
@@ -569,16 +579,16 @@ class Links extends AbstractHelper
      * Refers to a document serving as a subsection in a collection of
      * documents.
      *
-     * @param  AbstractPage $page  page to find relation for
-     * @return AbstractPage|null   page(s) or null
+     * @param  Zend_Navigation_Page $page  page to find relation for
+     * @return Zend_Navigation_Page|null   page(s) or null
      */
-    public function searchRevSubsection(AbstractPage $page)
+    public function searchRevSubsection(Zend_Navigation_Page $page)
     {
-        $found  = null;
-        $parent = $page->getParent();
-        if ($parent) {
-            if ($parent instanceof AbstractPage) {
-                $root = $this->findRoot($page);
+        $found = null;
+
+        if ($parent = $page->getParent()) {
+            if ($parent instanceof Zend_Navigation_Page) {
+                $root = $this->_findRoot($page);
                 foreach ($root as $chapter) {
                     if ($chapter->hasPage($parent)) {
                         $found = $parent;
@@ -601,20 +611,20 @@ class Links extends AbstractHelper
      * makes sure finder methods will not traverse above the container given
      * to the render method.
      *
-     * @param  AbstractPage $page  page to find root for
-     * @return AbstractContainer   the root container of the given page
+     * @param  Zend_Navigaiton_Page $page  page to find root for
+     * @return Zend_Navigation_Container   the root container of the given page
      */
-    protected function findRoot(AbstractPage $page)
+    protected function _findRoot(Zend_Navigation_Page $page)
     {
-        if ($this->root) {
-            return $this->root;
+        if ($this->_root) {
+            return $this->_root;
         }
 
         $root = $page;
 
         while ($parent = $page->getParent()) {
             $root = $parent;
-            if ($parent instanceof AbstractPage) {
+            if ($parent instanceof Zend_Navigation_Page) {
                 $page = $parent;
             } else {
                 break;
@@ -627,40 +637,40 @@ class Links extends AbstractHelper
     /**
      * Converts a $mixed value to an array of pages
      *
-     * @param  mixed $mixed             mixed value to get page(s) from
-     * @param  bool  $recursive         whether $value should be looped
-     *                                  if it is an array or a config
-     * @return AbstractPage|array|null  empty if unable to convert
+     * @param  mixed $mixed                     mixed value to get page(s) from
+     * @param  bool  $recursive                 whether $value should be looped
+     *                                          if it is an array or a config
+     * @return Zend_Navigation_Page|array|null  empty if unable to convert
      */
-    protected function convertToPages($mixed, $recursive = true)
+    protected function _convertToPages($mixed, $recursive = true)
     {
-        if ($mixed instanceof AbstractPage) {
-            // value is a page instance; return directly
-            return $mixed;
-        } elseif ($mixed instanceof AbstractContainer) {
-            // value is a container; return pages in it
-            $pages = array();
-            foreach ($mixed as $page) {
-                $pages[] = $page;
+        if (is_object($mixed)) {
+            if ($mixed instanceof Zend_Navigation_Page) {
+                // value is a page instance; return directly
+                return $mixed;
+            } elseif ($mixed instanceof Zend_Navigation_Container) {
+                // value is a container; return pages in it
+                $pages = array();
+                foreach ($mixed as $page) {
+                    $pages[] = $page;
+                }
+                return $pages;
+            } elseif ($mixed instanceof Zend_Config) {
+                // convert config object to array and extract
+                return $this->_convertToPages($mixed->toArray(), $recursive);
             }
-            return $pages;
-        } elseif ($mixed instanceof Traversable) {
-            $mixed = ArrayUtils::iteratorToArray($mixed);
         } elseif (is_string($mixed)) {
             // value is a string; make an URI page
-            return AbstractPage::factory(array(
+            return Zend_Navigation_Page::factory(array(
                 'type' => 'uri',
                 'uri'  => $mixed
             ));
-        }
-
-        if (is_array($mixed) && !empty($mixed)) {
+        } elseif (is_array($mixed) && !empty($mixed)) {
             if ($recursive && is_numeric(key($mixed))) {
                 // first key is numeric; assume several pages
                 $pages = array();
                 foreach ($mixed as $value) {
-                    $value = $this->convertToPages($value, false);
-                    if ($value) {
+                    if ($value = $this->_convertToPages($value, false)) {
                         $pages[] = $value;
                     }
                 }
@@ -668,9 +678,9 @@ class Links extends AbstractHelper
             } else {
                 // pass array to factory directly
                 try {
-                    $page = AbstractPage::factory($mixed);
+                    $page = Zend_Navigation_Page::factory($mixed);
                     return $page;
-                } catch (\Exception $e) {
+                } catch (Exception $e) {
                 }
             }
         }
@@ -684,7 +694,7 @@ class Links extends AbstractHelper
     /**
      * Renders the given $page as a link element, with $attrib = $relation
      *
-     * @param  AbstractPage         $page      the page to render the link for
+     * @param  Zend_Navigation_Page $page      the page to render the link for
      * @param  string               $attrib    the attribute to use for $type,
      *                                         either 'rel' or 'rev'
      * @param  string               $relation  relation type, muse be one of;
@@ -694,15 +704,17 @@ class Links extends AbstractHelper
      *                                         prev, section, start, stylesheet,
      *                                         subsection
      * @return string                          rendered link element
-     * @throws Exception\DomainException if $attrib is invalid
+     * @throws Zend_View_Exception             if $attrib is invalid
      */
-    public function renderLink(AbstractPage $page, $attrib, $relation)
+    public function renderLink(Zend_Navigation_Page $page, $attrib, $relation)
     {
         if (!in_array($attrib, array('rel', 'rev'))) {
-            throw new Exception\DomainException(sprintf(
-                'Invalid relation attribute "%s", must be "rel" or "rev"',
-                $attrib
-            ));
+            require_once 'Zend/View/Exception.php';
+            $e = new Zend_View_Exception(sprintf(
+                    'Invalid relation attribute "%s", must be "rel" or "rev"',
+                    $attrib));
+            $e->setView($this->view);
+            throw $e;
         }
 
         if (!$href = $page->getHref()) {
@@ -718,32 +730,30 @@ class Links extends AbstractHelper
         );
 
         return '<link' .
-               $this->htmlAttribs($attribs) .
+               $this->_htmlAttribs($attribs) .
                $this->getClosingBracket();
     }
 
-    // Zend\View\Helper\Navigation\Helper:
+    // Zend_View_Helper_Navigation_Helper:
 
     /**
      * Renders helper
      *
-     * Implements {@link HelperInterface::render()}.
+     * Implements {@link Zend_View_Helper_Navigation_Helper::render()}.
      *
-     * @param  AbstractContainer|string|null $container [optional] container to render.
-     *                                         Default is to render the
-     *                                         container registered in the
-     *                                         helper.
-     * @return string                          helper output
+     * @param  Zend_Navigation_Container $container  [optional] container to
+     *                                               render. Default is to
+     *                                               render the container
+     *                                               registered in the helper.
+     * @return string                                helper output
      */
-    public function render($container = null)
+    public function render(Zend_Navigation_Container $container = null)
     {
-        $this->parseContainer($container);
         if (null === $container) {
             $container = $this->getContainer();
         }
 
-        $active = $this->findActive($container);
-        if ($active) {
+        if ($active = $this->findActive($container)) {
             $active = $active['page'];
         } else {
             // no active page
@@ -752,21 +762,20 @@ class Links extends AbstractHelper
 
         $output = '';
         $indent = $this->getIndent();
-        $this->root = $container;
+        $this->_root = $container;
 
         $result = $this->findAllRelations($active, $this->getRenderFlag());
         foreach ($result as $attrib => $types) {
             foreach ($types as $relation => $pages) {
                 foreach ($pages as $page) {
-                    $r = $this->renderLink($page, $attrib, $relation);
-                    if ($r) {
+                    if ($r = $this->renderLink($page, $attrib, $relation)) {
                         $output .= $indent . $r . self::EOL;
                     }
                 }
             }
         }
 
-        $this->root = null;
+        $this->_root = null;
 
         // return output (trim last newline by spec)
         return strlen($output) ? rtrim($output, self::EOL) : '';

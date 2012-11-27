@@ -1,3 +1,4 @@
-<h1>Hello, <?=$this->escape($this->real_name);?></h1>
-You have entered this page: <?=$this->escape($this->request);?> time(s).
-<a href='<?=$this->escape($this->urllogout);?>'>Logout</a>
+<h1>Hello, <?php echo $this->escape($this->firstname);?></h1>
+You have entered this page: <?php echo $this->escape($this->request);?> time(s).
+<a href='<?php echo $this->escape($this->urllogout);?>'>Logout</a>
+<a href='<?php echo $this->escape($this->processeditprofile);?>'>Edit</a>

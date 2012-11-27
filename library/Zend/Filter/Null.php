@@ -1,123 +1,132 @@
 <?php
 /**
- * Zend Framework (http://framework.zend.com/)
+ * Zend Framework
  *
- * @link      http://github.com/zendframework/zf2 for the canonical source repository
- * @copyright Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
- * @license   http://framework.zend.com/license/new-bsd New BSD License
- * @package   Zend_Filter
+ * LICENSE
+ *
+ * This source file is subject to the new BSD license that is bundled
+ * with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://framework.zend.com/license/new-bsd
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@zend.com so we can send you a copy immediately.
+ *
+ * @category   Zend
+ * @package    Zend_Filter
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id: Null.php 24593 2012-01-05 20:35:02Z matthew $
  */
 
-namespace Zend\Filter;
-
-use Traversable;
+/**
+ * @see Zend_Filter_Interface
+ */
+require_once 'Zend/Filter/Interface.php';
 
 /**
  * @category   Zend
  * @package    Zend_Filter
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
-class Null extends AbstractFilter
+class Zend_Filter_Null implements Zend_Filter_Interface
 {
-    const TYPE_BOOLEAN      = 1;
-    const TYPE_INTEGER      = 2;
-    const TYPE_EMPTY_ARRAY  = 4;
-    const TYPE_STRING       = 8;
-    const TYPE_ZERO_STRING  = 16;
-    const TYPE_FLOAT        = 32;
-    const TYPE_ALL          = 63;
+    const BOOLEAN      = 1;
+    const INTEGER      = 2;
+    const EMPTY_ARRAY  = 4;
+    const STRING       = 8;
+    const ZERO         = 16;
+    const ALL          = 31;
 
-    /**
-     * @var array
-     */
-    protected $constants = array(
-        self::TYPE_BOOLEAN     => 'boolean',
-        self::TYPE_INTEGER     => 'integer',
-        self::TYPE_EMPTY_ARRAY => 'array',
-        self::TYPE_STRING      => 'string',
-        self::TYPE_ZERO_STRING => 'zero',
-        self::TYPE_FLOAT       => 'float',
-        self::TYPE_ALL         => 'all',
+    protected $_constants = array(
+        self::BOOLEAN     => 'boolean',
+        self::INTEGER     => 'integer',
+        self::EMPTY_ARRAY => 'array',
+        self::STRING      => 'string',
+        self::ZERO        => 'zero',
+        self::ALL         => 'all'
     );
 
     /**
-     * @var array
+     * Internal type to detect
+     *
+     * @var integer
      */
-    protected $options = array(
-        'type' => self::TYPE_ALL,
-    );
+    protected $_type = self::ALL;
 
     /**
      * Constructor
      *
-     * @param string|array|Traversable $typeOrOptions OPTIONAL
+     * @param string|array|Zend_Config $options OPTIONAL
      */
-    public function __construct($typeOrOptions = null)
+    public function __construct($options = null)
     {
-        if ($typeOrOptions !== null) {
-            if ($typeOrOptions instanceof Traversable) {
-                $typeOrOptions = iterator_to_array($typeOrOptions);
+        if ($options instanceof Zend_Config) {
+            $options = $options->toArray();
+        } else if (!is_array($options)) {
+            $options = func_get_args();
+            $temp    = array();
+            if (!empty($options)) {
+                $temp = array_shift($options);
             }
+            $options = $temp;
+        } else if (is_array($options) && array_key_exists('type', $options)) {
+            $options = $options['type'];
+        }
 
-            if (is_array($typeOrOptions)) {
-                if (isset($typeOrOptions['type'])) {
-                    $this->setOptions($typeOrOptions);
-                } else {
-                    $this->setType($typeOrOptions);
-                }
-            } else {
-                $this->setType($typeOrOptions);
-            }
+        if (!empty($options)) {
+            $this->setType($options);
         }
     }
 
     /**
-     * Set boolean types
+     * Returns the set null types
+     *
+     * @return array
+     */
+    public function getType()
+    {
+        return $this->_type;
+    }
+
+    /**
+     * Set the null types
      *
      * @param  integer|array $type
-     * @throws Exception\InvalidArgumentException
-     * @return Boolean
+     * @throws Zend_Filter_Exception
+     * @return Zend_Filter_Null
      */
     public function setType($type = null)
     {
         if (is_array($type)) {
             $detected = 0;
-            foreach ($type as $value) {
+            foreach($type as $value) {
                 if (is_int($value)) {
                     $detected += $value;
-                } elseif (in_array($value, $this->constants)) {
-                    $detected += array_search($value, $this->constants);
+                } else if (in_array($value, $this->_constants)) {
+                    $detected += array_search($value, $this->_constants);
                 }
             }
 
             $type = $detected;
-        } elseif (is_string($type) && in_array($type, $this->constants)) {
-            $type = array_search($type, $this->constants);
+        } else if (is_string($type)) {
+            if (in_array($type, $this->_constants)) {
+                $type = array_search($type, $this->_constants);
+            }
         }
 
-        if (!is_int($type) || ($type < 0) || ($type > self::TYPE_ALL)) {
-            throw new Exception\InvalidArgumentException(sprintf(
-                'Unknown type value "%s" (%s)',
-                $type,
-                gettype($type)
-            ));
+        if (!is_int($type) || ($type < 0) || ($type > self::ALL)) {
+            require_once 'Zend/Filter/Exception.php';
+            throw new Zend_Filter_Exception('Unknown type');
         }
 
-        $this->options['type'] = $type;
+        $this->_type = $type;
         return $this;
     }
 
     /**
-     * Returns defined boolean types
-     *
-     * @return int
-     */
-    public function getType()
-    {
-        return $this->options['type'];
-    }
-
-    /**
-     * Defined by Zend\Filter\FilterInterface
+     * Defined by Zend_Filter_Interface
      *
      * Returns null representation of $value, if value is empty and matches
      * types that should be considered null.
@@ -129,49 +138,41 @@ class Null extends AbstractFilter
     {
         $type = $this->getType();
 
-        // FLOAT (0.0)
-        if ($type >= self::TYPE_FLOAT) {
-            $type -= self::TYPE_FLOAT;
-            if (is_float($value) && ($value == 0.0)) {
-                return null;
-            }
-        }
-
         // STRING ZERO ('0')
-        if ($type >= self::TYPE_ZERO_STRING) {
-            $type -= self::TYPE_ZERO_STRING;
+        if ($type >= self::ZERO) {
+            $type -= self::ZERO;
             if (is_string($value) && ($value == '0')) {
                 return null;
             }
         }
 
         // STRING ('')
-        if ($type >= self::TYPE_STRING) {
-            $type -= self::TYPE_STRING;
+        if ($type >= self::STRING) {
+            $type -= self::STRING;
             if (is_string($value) && ($value == '')) {
                 return null;
             }
         }
 
         // EMPTY_ARRAY (array())
-        if ($type >= self::TYPE_EMPTY_ARRAY) {
-            $type -= self::TYPE_EMPTY_ARRAY;
+        if ($type >= self::EMPTY_ARRAY) {
+            $type -= self::EMPTY_ARRAY;
             if (is_array($value) && ($value == array())) {
                 return null;
             }
         }
 
         // INTEGER (0)
-        if ($type >= self::TYPE_INTEGER) {
-            $type -= self::TYPE_INTEGER;
+        if ($type >= self::INTEGER) {
+            $type -= self::INTEGER;
             if (is_int($value) && ($value == 0)) {
                 return null;
             }
         }
 
         // BOOLEAN (false)
-        if ($type >= self::TYPE_BOOLEAN) {
-            $type -= self::TYPE_BOOLEAN;
+        if ($type >= self::BOOLEAN) {
+            $type -= self::BOOLEAN;
             if (is_bool($value) && ($value == false)) {
                 return null;
             }

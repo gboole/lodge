@@ -1,17 +1,29 @@
 <?php
 /**
- * Zend Framework (http://framework.zend.com/)
+ * Zend Framework
  *
- * @link      http://github.com/zendframework/zf2 for the canonical source repository
- * @copyright Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
- * @license   http://framework.zend.com/license/new-bsd New BSD License
- * @package   Zend_Memory
+ * LICENSE
+ *
+ * This source file is subject to the new BSD license that is bundled
+ * with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://framework.zend.com/license/new-bsd
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@zend.com so we can send you a copy immediately.
+ *
+ * @category   Zend
+ * @package    Zend_Memory
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id: Movable.php 24593 2012-01-05 20:35:02Z matthew $
  */
 
-namespace Zend\Memory\Container;
+/** Zend_Memory_Container */
+require_once 'Zend/Memory/Container.php';
 
-use Zend\Memory;
-use Zend\Memory\Exception;
+/** Zend_Memory_Value */
+require_once 'Zend/Memory/Value.php';
 
 /**
  * Memory value container
@@ -20,29 +32,30 @@ use Zend\Memory\Exception;
  *
  * @category   Zend
  * @package    Zend_Memory
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
-class Movable extends AbstractContainer
-{
+class Zend_Memory_Container_Movable extends Zend_Memory_Container {
     /**
      * Internal object Id
      *
      * @var integer
      */
-    protected $id;
+    protected $_id;
 
     /**
      * Memory manager reference
      *
-     * @var \Zend\Memory\MemoryManager
+     * @var Zend_Memory_Manager
      */
-    private $memManager;
+    private $_memManager;
 
     /**
      * Value object
      *
-     * @var \Zend\Memory\Value
+     * @var Zend_Memory_Value
      */
-    private $value;
+    private $_value;
 
     /** Value states */
     const LOADED   = 1;
@@ -54,21 +67,21 @@ class Movable extends AbstractContainer
      *
      * @var integer
      */
-    private $state;
+    private $_state;
 
     /**
      * Object constructor
      *
-     * @param \Zend\Memory\MemoryManager $memoryManager
+     * @param Zend_Memory_Manager $memoryManager
      * @param integer $id
      * @param string $value
      */
-    public function __construct(Memory\MemoryManager $memoryManager, $id, $value)
+    public function __construct(Zend_Memory_Manager $memoryManager, $id, $value)
     {
-        $this->memManager = $memoryManager;
-        $this->id    = $id;
-        $this->state = self::LOADED;
-        $this->value = new Memory\Value($value, $this);
+        $this->_memManager = $memoryManager;
+        $this->_id    = $id;
+        $this->_state = self::LOADED;
+        $this->_value = new Zend_Memory_Value($value, $this);
     }
 
     /**
@@ -76,12 +89,12 @@ class Movable extends AbstractContainer
      */
     public function lock()
     {
-        if (!($this->state & self::LOADED)) {
-            $this->memManager->load($this, $this->id);
-            $this->state |= self::LOADED;
+        if ( !($this->_state & self::LOADED) ) {
+            $this->_memManager->load($this, $this->_id);
+            $this->_state |= self::LOADED;
         }
 
-        $this->state |= self::LOCKED;
+        $this->_state |= self::LOCKED;
 
         /**
          * @todo
@@ -96,7 +109,7 @@ class Movable extends AbstractContainer
     public function unlock()
     {
         // Clear LOCKED state bit
-        $this->state &= ~self::LOCKED;
+        $this->_state &= ~self::LOCKED;
     }
 
     /**
@@ -106,7 +119,7 @@ class Movable extends AbstractContainer
      */
     public function isLocked()
     {
-        return $this->state & self::LOCKED;
+        return $this->_state & self::LOCKED;
     }
 
     /**
@@ -117,20 +130,21 @@ class Movable extends AbstractContainer
      *
      * @param string $property
      * @return string
-     * @throws Exception\InvalidArgumentException
+     * @throws Zend_Memory_Exception
      */
     public function __get($property)
     {
         if ($property != 'value') {
-            throw new Exception\InvalidArgumentException('Unknown property: \Zend\Memory\Container\Movable::$' . $property);
+            require_once 'Zend/Memory/Exception.php';
+            throw new Zend_Memory_Exception('Unknown property: Zend_Memory_container::$' . $property);
         }
 
-        if (!($this->state & self::LOADED)) {
-            $this->memManager->load($this, $this->id);
-            $this->state |= self::LOADED;
+        if ( !($this->_state & self::LOADED) ) {
+            $this->_memManager->load($this, $this->_id);
+            $this->_state |= self::LOADED;
         }
 
-        return $this->value;
+        return $this->_value;
     }
 
     /**
@@ -138,18 +152,19 @@ class Movable extends AbstractContainer
      *
      * @param string $property
      * @param  string $value
-     * @throws Exception\InvalidArgumentException
+     * @throws Zend_Exception
      */
     public function __set($property, $value)
     {
         if ($property != 'value') {
-            throw new Exception\InvalidArgumentException('Unknown property: \Zend\Memory\Container\Movable::$' . $property);
+            require_once 'Zend/Memory/Exception.php';
+            throw new Zend_Memory_Exception('Unknown property: Zend_Memory_container::$' . $property);
         }
 
-        $this->state = self::LOADED;
-        $this->value = new Memory\Value($value, $this);
+        $this->_state = self::LOADED;
+        $this->_value = new Zend_Memory_Value($value, $this);
 
-        $this->memManager->processUpdate($this, $this->id);
+        $this->_memManager->processUpdate($this, $this->_id);
     }
 
 
@@ -163,12 +178,12 @@ class Movable extends AbstractContainer
      */
     public function &getRef()
     {
-        if (!($this->state & self::LOADED)) {
-            $this->memManager->load($this, $this->id);
-            $this->state |= self::LOADED;
+        if ( !($this->_state & self::LOADED) ) {
+            $this->_memManager->load($this, $this->_id);
+            $this->_state |= self::LOADED;
         }
 
-        return $this->value->getRef();
+        return $this->_value->getRef();
     }
 
     /**
@@ -178,7 +193,7 @@ class Movable extends AbstractContainer
      */
     public function touch()
     {
-        $this->memManager->processUpdate($this, $this->id);
+        $this->_memManager->processUpdate($this, $this->_id);
     }
 
     /**
@@ -190,9 +205,9 @@ class Movable extends AbstractContainer
     public function processUpdate()
     {
         // Clear SWAPPED state bit
-        $this->state &= ~self::SWAPPED;
+        $this->_state &= ~self::SWAPPED;
 
-        $this->memManager->processUpdate($this, $this->id);
+        $this->_memManager->processUpdate($this, $this->_id);
     }
 
     /**
@@ -202,12 +217,12 @@ class Movable extends AbstractContainer
      */
     public function startTrace()
     {
-        if (!($this->state & self::LOADED)) {
-            $this->memManager->load($this, $this->id);
-            $this->state |= self::LOADED;
+        if ( !($this->_state & self::LOADED) ) {
+            $this->_memManager->load($this, $this->_id);
+            $this->_state |= self::LOADED;
         }
 
-        $this->value->startTrace();
+        $this->_value->startTrace();
     }
 
     /**
@@ -217,7 +232,7 @@ class Movable extends AbstractContainer
      */
     public function setValue($value)
     {
-        $this->value = new Memory\Value($value, $this);
+        $this->_value = new Zend_Memory_Value($value, $this);
     }
 
     /**
@@ -228,9 +243,9 @@ class Movable extends AbstractContainer
     public function unloadValue()
     {
         // Clear LOADED state bit
-        $this->state &= ~self::LOADED;
+        $this->_state &= ~self::LOADED;
 
-        $this->value = null;
+        $this->_value = null;
     }
 
     /**
@@ -241,7 +256,7 @@ class Movable extends AbstractContainer
     public function markAsSwapped()
     {
         // Clear LOADED state bit
-        $this->state |= self::LOADED;
+        $this->_state |= self::LOADED;
     }
 
     /**
@@ -252,7 +267,7 @@ class Movable extends AbstractContainer
      */
     public function isSwapped()
     {
-        return $this->state & self::SWAPPED;
+        return $this->_state & self::SWAPPED;
     }
 
     /**
@@ -263,7 +278,7 @@ class Movable extends AbstractContainer
      */
     public function getId()
     {
-        return $this->id;
+        return $this->_id;
     }
     /**
      * Destroy memory container and remove it from memory manager list
@@ -277,6 +292,6 @@ class Movable extends AbstractContainer
          * Cleaning is performed by Memory Manager destructor
          */
 
-        $this->memManager->unlink($this, $this->id);
+        $this->_memManager->unlink($this, $this->_id);
     }
 }

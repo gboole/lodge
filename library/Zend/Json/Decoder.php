@@ -1,70 +1,81 @@
 <?php
 /**
- * Zend Framework (http://framework.zend.com/)
+ * Zend Framework
  *
- * @link      http://github.com/zendframework/zf2 for the canonical source repository
- * @copyright Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
- * @license   http://framework.zend.com/license/new-bsd New BSD License
- * @package   Zend_Json
+ * LICENSE
+ *
+ * This source file is subject to the new BSD license that is bundled
+ * with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://framework.zend.com/license/new-bsd
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@zend.com so we can send you a copy immediately.
+ *
+ * @category   Zend
+ * @package    Zend_Json
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id: Decoder.php 24799 2012-05-12 19:27:07Z adamlundrigan $
  */
 
-namespace Zend\Json;
-
-use stdClass;
-use Zend\Json\Exception\InvalidArgumentException;
-use Zend\Json\Exception\RuntimeException;
+/**
+ * @see Zend_Json
+ */
+require_once 'Zend/Json.php';
 
 /**
  * Decode JSON encoded string to PHP variable constructs
  *
  * @category   Zend
  * @package    Zend_Json
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
-class Decoder
+class Zend_Json_Decoder
 {
-
     /**
      * Parse tokens used to decode the JSON object. These are not
      * for public consumption, they are just used internally to the
      * class.
      */
-    const EOF       = 0;
-    const DATUM     = 1;
+    const EOF         = 0;
+    const DATUM        = 1;
     const LBRACE    = 2;
-    const LBRACKET  = 3;
-    const RBRACE    = 4;
-    const RBRACKET  = 5;
-    const COMMA     = 6;
-    const COLON     = 7;
+    const LBRACKET    = 3;
+    const RBRACE     = 4;
+    const RBRACKET    = 5;
+    const COMMA       = 6;
+    const COLON        = 7;
 
     /**
      * Use to maintain a "pointer" to the source being decoded
      *
      * @var string
      */
-    protected $source;
+    protected $_source;
 
     /**
      * Caches the source length
      *
      * @var int
      */
-    protected $sourceLength;
+    protected $_sourceLength;
 
     /**
-     * The offset within the source being decoded
+     * The offset within the souce being decoded
      *
      * @var int
      *
      */
-    protected $offset;
+    protected $_offset;
 
     /**
      * The current token being considered in the parser cycle
      *
      * @var int
      */
-    protected $token;
+    protected $_token;
 
     /**
      * Flag indicating how objects should be decoded
@@ -72,12 +83,7 @@ class Decoder
      * @var int
      * @access protected
      */
-    protected $decodeType;
-
-    /**
-     * @var $_tokenValue
-     */
-    protected $tokenValue;
+    protected $_decodeType;
 
     /**
      * Constructor
@@ -86,25 +92,22 @@ class Decoder
      * @param int $decodeType How objects should be decoded -- see
      * {@link Zend_Json::TYPE_ARRAY} and {@link Zend_Json::TYPE_OBJECT} for
      * valid values
-     * @throws InvalidArgumentException
      * @return void
      */
     protected function __construct($source, $decodeType)
     {
         // Set defaults
-        $this->source       = self::decodeUnicodeString($source);
-        $this->sourceLength = strlen($this->source);
-        $this->token        = self::EOF;
-        $this->offset       = 0;
+        $this->_source       = self::decodeUnicodeString($source);
+        $this->_sourceLength = strlen($this->_source);
+        $this->_token        = self::EOF;
+        $this->_offset       = 0;
 
-        switch ($decodeType) {
-            case Json::TYPE_ARRAY:
-            case Json::TYPE_OBJECT:
-                $this->decodeType = $decodeType;
-                break;
-            default:
-                throw new InvalidArgumentException("Unknown decode type '{$decodeType}', please use one of the constants Json::TYPE_*");
+        // Normalize and set $decodeType
+        if (!in_array($decodeType, array(Zend_Json::TYPE_ARRAY, Zend_Json::TYPE_OBJECT)))
+        {
+            $decodeType = Zend_Json::TYPE_ARRAY;
         }
+        $this->_decodeType   = $decodeType;
 
         // Set pointer at first token
         $this->_getNextToken();
@@ -127,6 +130,8 @@ class Decoder
      * return a StdClass object instead, pass {@link Zend_Json::TYPE_OBJECT} to
      * the $objectDecodeType parameter.
      *
+     * Throws a Zend_Json_Exception if the source string is null.
+     *
      * @static
      * @access public
      * @param string $source String to be decoded
@@ -134,23 +139,34 @@ class Decoder
      * either or {@link Zend_Json::TYPE_ARRAY} or
      * {@link Zend_Json::TYPE_OBJECT}; defaults to TYPE_ARRAY
      * @return mixed
+     * @throws Zend_Json_Exception
      */
-    public static function decode($source, $objectDecodeType = Json::TYPE_OBJECT)
+    public static function decode($source = null, $objectDecodeType = Zend_Json::TYPE_ARRAY)
     {
+        if (null === $source) {
+            require_once 'Zend/Json/Exception.php';
+            throw new Zend_Json_Exception('Must specify JSON encoded source for decoding');
+        } elseif (!is_string($source)) {
+            require_once 'Zend/Json/Exception.php';
+            throw new Zend_Json_Exception('Can only decode JSON encoded strings');
+        }
+
         $decoder = new self($source, $objectDecodeType);
+
         return $decoder->_decodeValue();
     }
 
+
     /**
-     * Recursive driving routine for supported toplevel tops
+     * Recursive driving rountine for supported toplevel tops
      *
      * @return mixed
      */
     protected function _decodeValue()
     {
-        switch ($this->token) {
+        switch ($this->_token) {
             case self::DATUM:
-                $result  = $this->tokenValue;
+                $result  = $this->_tokenValue;
                 $this->_getNextToken();
                 return($result);
                 break;
@@ -175,11 +191,10 @@ class Decoder
      * name that should wrap the data contained within the encoded source.
      *
      * Decodes to either an array or StdClass object, based on the value of
-     * {@link $decodeType}. If invalid $decodeType present, returns as an
+     * {@link $_decodeType}. If invalid $_decodeType present, returns as an
      * array.
      *
-     * @return array|stdClass
-     * @throws RuntimeException
+     * @return array|StdClass
      */
     protected function _decodeObject()
     {
@@ -187,36 +202,39 @@ class Decoder
         $tok = $this->_getNextToken();
 
         while ($tok && $tok != self::RBRACE) {
-            if ($tok != self::DATUM || ! is_string($this->tokenValue)) {
-                throw new RuntimeException('Missing key in object encoding: ' . $this->source);
+            if ($tok != self::DATUM || ! is_string($this->_tokenValue)) {
+                require_once 'Zend/Json/Exception.php';
+                throw new Zend_Json_Exception('Missing key in object encoding: ' . $this->_source);
             }
 
-            $key = $this->tokenValue;
+            $key = $this->_tokenValue;
             $tok = $this->_getNextToken();
 
             if ($tok != self::COLON) {
-                throw new RuntimeException('Missing ":" in object encoding: ' . $this->source);
+                require_once 'Zend/Json/Exception.php';
+                throw new Zend_Json_Exception('Missing ":" in object encoding: ' . $this->_source);
             }
 
             $tok = $this->_getNextToken();
             $members[$key] = $this->_decodeValue();
-            $tok = $this->token;
+            $tok = $this->_token;
 
             if ($tok == self::RBRACE) {
                 break;
             }
 
             if ($tok != self::COMMA) {
-                throw new RuntimeException('Missing "," in object encoding: ' . $this->source);
+                require_once 'Zend/Json/Exception.php';
+                throw new Zend_Json_Exception('Missing "," in object encoding: ' . $this->_source);
             }
 
             $tok = $this->_getNextToken();
         }
 
-        switch ($this->decodeType) {
-            case Json::TYPE_OBJECT:
+        switch ($this->_decodeType) {
+            case Zend_Json::TYPE_OBJECT:
                 // Create new StdClass and populate with $members
-                $result = new stdClass();
+                $result = new StdClass();
                 foreach ($members as $key => $value) {
                     if ($key === '') {
                         $key = '_empty_';
@@ -224,7 +242,7 @@ class Decoder
                     $result->$key = $value;
                 }
                 break;
-            case Json::TYPE_ARRAY:
+            case Zend_Json::TYPE_ARRAY:
             default:
                 $result = $members;
                 break;
@@ -239,7 +257,6 @@ class Decoder
      *    [element, element2,...,elementN]
      *
      * @return array
-     * @throws RuntimeException
      */
     protected function _decodeArray()
     {
@@ -250,38 +267,39 @@ class Decoder
         while ($tok && $tok != self::RBRACKET) {
             $result[$index++] = $this->_decodeValue();
 
-            $tok = $this->token;
+            $tok = $this->_token;
 
             if ($tok == self::RBRACKET || !$tok) {
                 break;
             }
 
             if ($tok != self::COMMA) {
-                throw new RuntimeException('Missing "," in array encoding: ' . $this->source);
+                require_once 'Zend/Json/Exception.php';
+                throw new Zend_Json_Exception('Missing "," in array encoding: ' . $this->_source);
             }
 
             $tok = $this->_getNextToken();
         }
 
         $this->_getNextToken();
-        return $result;
+        return($result);
     }
 
 
     /**
-     * Removes whitespace characters from the source input
+     * Removes whitepsace characters from the source input
      */
     protected function _eatWhitespace()
     {
         if (preg_match(
                 '/([\t\b\f\n\r ])*/s',
-                $this->source,
+                $this->_source,
                 $matches,
                 PREG_OFFSET_CAPTURE,
-                $this->offset)
-            && $matches[0][1] == $this->offset)
+                $this->_offset)
+            && $matches[0][1] == $this->_offset)
         {
-            $this->offset += strlen($matches[0][0]);
+            $this->_offset += strlen($matches[0][0]);
         }
     }
 
@@ -290,41 +308,40 @@ class Decoder
      * Retrieves the next token from the source stream
      *
      * @return int Token constant value specified in class definition
-     * @throws RuntimeException
      */
     protected function _getNextToken()
     {
-        $this->token      = self::EOF;
-        $this->tokenValue = null;
+        $this->_token      = self::EOF;
+        $this->_tokenValue = null;
         $this->_eatWhitespace();
 
-        if ($this->offset >= $this->sourceLength) {
+        if ($this->_offset >= $this->_sourceLength) {
             return(self::EOF);
         }
 
-        $str        = $this->source;
-        $str_length = $this->sourceLength;
-        $i          = $this->offset;
+        $str        = $this->_source;
+        $str_length = $this->_sourceLength;
+        $i          = $this->_offset;
         $start      = $i;
 
         switch ($str{$i}) {
             case '{':
-               $this->token = self::LBRACE;
+               $this->_token = self::LBRACE;
                break;
             case '}':
-                $this->token = self::RBRACE;
+                $this->_token = self::RBRACE;
                 break;
             case '[':
-                $this->token = self::LBRACKET;
+                $this->_token = self::LBRACKET;
                 break;
             case ']':
-                $this->token = self::RBRACKET;
+                $this->_token = self::RBRACKET;
                 break;
             case ',':
-                $this->token = self::COMMA;
+                $this->_token = self::COMMA;
                 break;
             case ':':
-                $this->token = self::COLON;
+                $this->_token = self::COLON;
                 break;
             case  '"':
                 $result = '';
@@ -371,45 +388,47 @@ class Decoder
                                 $result .= '\'';
                                 break;
                             default:
-                                throw new RuntimeException("Illegal escape sequence '{$chr}'");
+                                require_once 'Zend/Json/Exception.php';
+                                throw new Zend_Json_Exception("Illegal escape "
+                                    .  "sequence '" . $chr . "'");
                         }
-                    } elseif ($chr == '"') {
+                    } elseif($chr == '"') {
                         break;
                     } else {
                         $result .= $chr;
                     }
                 } while ($i < $str_length);
 
-                $this->token = self::DATUM;
-                //$this->tokenValue = substr($str, $start + 1, $i - $start - 1);
-                $this->tokenValue = $result;
+                $this->_token = self::DATUM;
+                //$this->_tokenValue = substr($str, $start + 1, $i - $start - 1);
+                $this->_tokenValue = $result;
                 break;
             case 't':
                 if (($i+ 3) < $str_length && substr($str, $start, 4) == "true") {
-                    $this->token = self::DATUM;
+                    $this->_token = self::DATUM;
                 }
-                $this->tokenValue = true;
+                $this->_tokenValue = true;
                 $i += 3;
                 break;
             case 'f':
                 if (($i+ 4) < $str_length && substr($str, $start, 5) == "false") {
-                    $this->token = self::DATUM;
+                    $this->_token = self::DATUM;
                 }
-                $this->tokenValue = false;
+                $this->_tokenValue = false;
                 $i += 4;
                 break;
             case 'n':
                 if (($i+ 3) < $str_length && substr($str, $start, 4) == "null") {
-                    $this->token = self::DATUM;
+                    $this->_token = self::DATUM;
                 }
-                $this->tokenValue = NULL;
+                $this->_tokenValue = NULL;
                 $i += 3;
                 break;
         }
 
-        if ($this->token != self::EOF) {
-            $this->offset = $i + 1; // Consume the last token character
-            return($this->token);
+        if ($this->_token != self::EOF) {
+            $this->_offset = $i + 1; // Consume the last token character
+            return($this->_token);
         }
 
         $chr = $str{$i};
@@ -421,24 +440,27 @@ class Decoder
 
                 if (is_numeric($datum)) {
                     if (preg_match('/^0\d+$/', $datum)) {
-                        throw new RuntimeException("Octal notation not supported by JSON (value: {$datum})");
+                        require_once 'Zend/Json/Exception.php';
+                        throw new Zend_Json_Exception("Octal notation not supported by JSON (value: $datum)");
                     } else {
                         $val  = intval($datum);
                         $fVal = floatval($datum);
-                        $this->tokenValue = ($val == $fVal ? $val : $fVal);
+                        $this->_tokenValue = ($val == $fVal ? $val : $fVal);
                     }
                 } else {
-                    throw new RuntimeException("Illegal number format: {$datum}");
+                    require_once 'Zend/Json/Exception.php';
+                    throw new Zend_Json_Exception("Illegal number format: $datum");
                 }
 
-                $this->token = self::DATUM;
-                $this->offset = $start + strlen($datum);
+                $this->_token = self::DATUM;
+                $this->_offset = $start + strlen($datum);
             }
         } else {
-            throw new RuntimeException('Illegal Token');
+            require_once 'Zend/Json/Exception.php';
+            throw new Zend_Json_Exception('Illegal Token');
         }
 
-        return $this->token;
+        return($this->_token);
     }
 
     /**
@@ -449,17 +471,16 @@ class Decoder
      *
      * @link   http://solarphp.com/
      * @link   http://svn.solarphp.com/core/trunk/Solar/Json.php
-     * @param  string $chrs
+     * @param  string $value
      * @return string
      */
     public static function decodeUnicodeString($chrs)
     {
-        $chrs        = (string)$chrs;
         $delim       = substr($chrs, 0, 1);
         $utf8        = '';
         $strlen_chrs = strlen($chrs);
 
-        for ($i = 0; $i < $strlen_chrs; $i++) {
+        for($i = 0; $i < $strlen_chrs; $i++) {
 
             $substr_chrs_c_2 = substr($chrs, $i, 2);
             $ord_chrs_c = ord($chrs[$i]);
@@ -469,13 +490,7 @@ class Decoder
                     // single, escaped unicode character
                     $utf16 = chr(hexdec(substr($chrs, ($i + 2), 2)))
                            . chr(hexdec(substr($chrs, ($i + 4), 2)));
-                    $utf8char = self::_utf162utf8($utf16);
-                    $search  = array('\\', "\n", "\t", "\r", chr(0x08), chr(0x0C), '"', '\'', '/');
-                    if (in_array($utf8char, $search)) {
-                        $replace = array('\\\\', '\\n', '\\t', '\\r', '\\b', '\\f', '\\"', '\\\'', '\\/');
-                        $utf8char  = str_replace($search, $replace, $utf8char);
-                    }
-                    $utf8 .= $utf8char;
+                    $utf8 .= self::_utf162utf8($utf16);
                     $i += 5;
                     break;
                 case ($ord_chrs_c >= 0x20) && ($ord_chrs_c <= 0x7F):
@@ -522,7 +537,7 @@ class Decoder
      *
      * Normally should be handled by mb_convert_encoding, but
      * provides a slower PHP-only method for installations
-     * that lack the multibyte string extension.
+     * that lack the multibye string extension.
      *
      * This method is from the Solar Framework by Paul M. Jones
      *
@@ -533,7 +548,7 @@ class Decoder
     protected static function _utf162utf8($utf16)
     {
         // Check for mb extension otherwise do by hand.
-        if (function_exists('mb_convert_encoding')) {
+        if( function_exists('mb_convert_encoding') ) {
             return mb_convert_encoding($utf16, 'UTF-8', 'UTF-16');
         }
 
@@ -563,3 +578,4 @@ class Decoder
         return '';
     }
 }
+

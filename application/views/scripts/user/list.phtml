@@ -1,5 +1,5 @@
-  <h1><?=$this->escape($this->title);?></h1>
-  <h2><?=$this->escape($this->description);?></h2>
+  <h1><?php echo $this->escape($this->title);?></h1>
+  <h2><?php echo $this->escape($this->description);?></h2>
   <a href="register">Register</a>
    
   <table border="1">
@@ -12,14 +12,14 @@
  
   <?php foreach ($this->datas as $entry): ?>
   <tr>
-	  <td><?=$this->escape($entry->id)?></td>	
-	  <td><?=$this->escape($entry->username)?></td>
-	  <td><?=$this->escape($entry->firstname)?></td>	  
-	  <td><?=$this->escape($entry->lastname)?></td>
+	  <td><?php echo $this->escape($entry->id)?></td>	
+	  <td><?php echo $this->escape($entry->username)?></td>
+	  <td><?php echo $this->escape($entry->firstname)?></td>	  
+	  <td><?php echo $this->escape($entry->lastname)?></td>
 	  <td>
-	    <a href="edit/id/<?=$this->escape($entry->id)?>">Edit</a>
+	    <a href="edit/id/<?php echo $this->escape($entry->id)?>">Edit</a>
 		|
-	    <a href="del/id/<?=$this->escape($entry->id)?>">Delete</a>		
+	    <a href="del/id/<?php echo $this->escape($entry->id)?>">Delete</a>		
 	  </td>	  
 	</tr> 
 	

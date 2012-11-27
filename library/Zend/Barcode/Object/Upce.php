@@ -1,27 +1,47 @@
 <?php
 /**
- * Zend Framework (http://framework.zend.com/)
+ * Zend Framework
  *
- * @link      http://github.com/zendframework/zf2 for the canonical source repository
- * @copyright Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
- * @license   http://framework.zend.com/license/new-bsd New BSD License
- * @package   Zend_Barcode
+ * LICENSE
+ *
+ * This source file is subject to the new BSD license that is bundled
+ * with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://framework.zend.com/license/new-bsd
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@zend.com so we can send you a copy immediately.
+ *
+ * @category   Zend
+ * @package    Zend_Barcode
+ * @subpackage Object
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id: Upce.php 24593 2012-01-05 20:35:02Z matthew $
  */
 
-namespace Zend\Barcode\Object;
+/**
+ * @see Zend_Barcode_Object_Ean13
+ */
+require_once 'Zend/Barcode/Object/Ean13.php';
 
-use Zend\Validator\Barcode as BarcodeValidator;
+/**
+ * @see Zend_Validate_Barcode
+ */
+require_once 'Zend/Validate/Barcode.php';
 
 /**
  * Class for generate UpcA barcode
  *
  * @category   Zend
  * @package    Zend_Barcode
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
-class Upce extends Ean13
+class Zend_Barcode_Object_Upce extends Zend_Barcode_Object_Ean13
 {
 
-    protected $parities = array(
+    protected $_parities = array(
         0 => array(
             0 => array('B','B','B','A','A','A'),
             1 => array('B','B','A','B','A','A'),
@@ -50,11 +70,11 @@ class Upce extends Ean13
      * Default options for Postnet barcode
      * @return void
      */
-    protected function getDefaultOptions()
+    protected function _getDefaultOptions()
     {
-        $this->barcodeLength = 8;
-        $this->mandatoryChecksum = true;
-        $this->mandatoryQuietZones = true;
+        $this->_barcodeLength = 8;
+        $this->_mandatoryChecksum = true;
+        $this->_mandatoryQuietZones = true;
     }
 
     /**
@@ -74,12 +94,12 @@ class Upce extends Ean13
      * Width of the barcode (in pixels)
      * @return integer
      */
-    protected function calculateBarcodeWidth()
+    protected function _calculateBarcodeWidth()
     {
         $quietZone       = $this->getQuietZone();
-        $startCharacter  = (3 * $this->barThinWidth) * $this->factor;
-        $stopCharacter   = (6 * $this->barThinWidth) * $this->factor;
-        $encodedData     = (7 * $this->barThinWidth) * $this->factor * 6;
+        $startCharacter  = (3 * $this->_barThinWidth) * $this->_factor;
+        $stopCharacter   = (6 * $this->_barThinWidth) * $this->_factor;
+        $encodedData     = (7 * $this->_barThinWidth) * $this->_factor * 6;
         return $quietZone + $startCharacter + $encodedData + $stopCharacter + $quietZone;
     }
 
@@ -87,15 +107,15 @@ class Upce extends Ean13
      * Prepare array to draw barcode
      * @return array
      */
-    protected function prepareBarcode()
+    protected function _prepareBarcode()
     {
         $barcodeTable = array();
-        $height = ($this->drawText) ? 1.1 : 1;
+        $height = ($this->_drawText) ? 1.1 : 1;
 
         // Start character (101)
-        $barcodeTable[] = array(1 , $this->barThinWidth , 0 , $height);
-        $barcodeTable[] = array(0 , $this->barThinWidth , 0 , $height);
-        $barcodeTable[] = array(1 , $this->barThinWidth , 0 , $height);
+        $barcodeTable[] = array(1 , $this->_barThinWidth , 0 , $height);
+        $barcodeTable[] = array(0 , $this->_barThinWidth , 0 , $height);
+        $barcodeTable[] = array(1 , $this->_barThinWidth , 0 , $height);
 
         $textTable = str_split($this->getText());
         $system = 0;
@@ -103,22 +123,22 @@ class Upce extends Ean13
             $system = 1;
         }
         $checksum = $textTable[7];
-        $parity = $this->parities[$system][$checksum];
+        $parity = $this->_parities[$system][$checksum];
 
         for ($i = 1; $i < 7; $i++) {
-            $bars = str_split($this->codingMap[$parity[$i - 1]][$textTable[$i]]);
+            $bars = str_split($this->_codingMap[$parity[$i - 1]][$textTable[$i]]);
             foreach ($bars as $b) {
-                $barcodeTable[] = array($b , $this->barThinWidth , 0 , 1);
+                $barcodeTable[] = array($b , $this->_barThinWidth , 0 , 1);
             }
         }
 
         // Stop character (10101)
-        $barcodeTable[] = array(0 , $this->barThinWidth , 0 , $height);
-        $barcodeTable[] = array(1 , $this->barThinWidth , 0 , $height);
-        $barcodeTable[] = array(0 , $this->barThinWidth , 0 , $height);
-        $barcodeTable[] = array(1 , $this->barThinWidth , 0 , $height);
-        $barcodeTable[] = array(0 , $this->barThinWidth , 0 , $height);
-        $barcodeTable[] = array(1 , $this->barThinWidth , 0 , $height);
+        $barcodeTable[] = array(0 , $this->_barThinWidth , 0 , $height);
+        $barcodeTable[] = array(1 , $this->_barThinWidth , 0 , $height);
+        $barcodeTable[] = array(0 , $this->_barThinWidth , 0 , $height);
+        $barcodeTable[] = array(1 , $this->_barThinWidth , 0 , $height);
+        $barcodeTable[] = array(0 , $this->_barThinWidth , 0 , $height);
+        $barcodeTable[] = array(1 , $this->_barThinWidth , 0 , $height);
         return $barcodeTable;
     }
 
@@ -126,29 +146,29 @@ class Upce extends Ean13
      * Partial function to draw text
      * @return void
      */
-    protected function drawText()
+    protected function _drawText()
     {
-        if ($this->drawText) {
+        if ($this->_drawText) {
             $text = $this->getTextToDisplay();
-            $characterWidth = (7 * $this->barThinWidth) * $this->factor;
+            $characterWidth = (7 * $this->_barThinWidth) * $this->_factor;
             $leftPosition = $this->getQuietZone() - $characterWidth;
-            for ($i = 0; $i < $this->barcodeLength; $i ++) {
-                $fontSize = $this->fontSize;
+            for ($i = 0; $i < $this->_barcodeLength; $i ++) {
+                $fontSize = $this->_fontSize;
                 if ($i == 0 || $i == 7) {
                     $fontSize *= 0.8;
                 }
-                $this->addText(
+                $this->_addText(
                     $text{$i},
-                    $fontSize * $this->factor,
-                    $this->rotate(
+                    $fontSize * $this->_factor,
+                    $this->_rotate(
                         $leftPosition,
-                        (int) $this->withBorder * 2
-                            + $this->factor * ($this->barHeight + $fontSize) + 1
+                        (int) $this->_withBorder * 2
+                            + $this->_factor * ($this->_barHeight + $fontSize) + 1
                     ),
-                    $this->font,
-                    $this->foreColor,
+                    $this->_font,
+                    $this->_foreColor,
                     'left',
-                    - $this->orientation
+                    - $this->_orientation
                 );
                 switch ($i) {
                     case 0:
@@ -160,7 +180,7 @@ class Upce extends Ean13
                     default:
                         $factor = 0;
                 }
-                $leftPosition = $leftPosition + $characterWidth + ($factor * $this->barThinWidth * $this->factor);
+                $leftPosition = $leftPosition + $characterWidth + ($factor * $this->_barThinWidth * $this->_factor);
             }
         }
     }
@@ -168,23 +188,26 @@ class Upce extends Ean13
     /**
      * Particular validation for Upce barcode objects
      * (to suppress checksum character substitution)
-     *
      * @param string $value
      * @param array  $options
-     * @throws Exception\BarcodeValidationException
      */
-    protected function validateSpecificText($value, $options = array())
+    protected function _validateText($value, $options = array())
     {
-        $validator = new BarcodeValidator(array(
+        $validator = new Zend_Validate_Barcode(array(
             'adapter'  => 'upce',
             'checksum' => false,
         ));
 
-        $value = $this->addLeadingZeros($value, true);
+        $value = $this->_addLeadingZeros($value, true);
 
         if (!$validator->isValid($value)) {
             $message = implode("\n", $validator->getMessages());
-            throw new Exception\BarcodeValidationException($message);
+
+            /**
+             * @see Zend_Barcode_Object_Exception
+             */
+            require_once 'Zend/Barcode/Object/Exception.php';
+            throw new Zend_Barcode_Object_Exception($message);
         }
     }
 
@@ -196,7 +219,7 @@ class Upce extends Ean13
      */
     public function getChecksum($text)
     {
-        $text = $this->addLeadingZeros($text, true);
+        $text = $this->_addLeadingZeros($text, true);
         if ($text{0} != 1) {
             $text{0} = 0;
         }

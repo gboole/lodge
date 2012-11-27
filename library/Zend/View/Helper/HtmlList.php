@@ -1,62 +1,89 @@
 <?php
 /**
- * Zend Framework (http://framework.zend.com/)
+ * Zend Framework
  *
- * @link      http://github.com/zendframework/zf2 for the canonical source repository
- * @copyright Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
- * @license   http://framework.zend.com/license/new-bsd New BSD License
- * @package   Zend_View
- */
-
-namespace Zend\View\Helper;
-
-/**
- * Helper for ordered and unordered lists
+ * LICENSE
+ *
+ * This source file is subject to the new BSD license that is bundled
+ * with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://framework.zend.com/license/new-bsd
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@zend.com so we can send you a copy immediately.
  *
  * @category   Zend
  * @package    Zend_View
  * @subpackage Helper
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id: HtmlList.php 24593 2012-01-05 20:35:02Z matthew $
  */
-class HtmlList extends AbstractHtmlElement
+
+
+/**
+ * Zend_View_Helper_FormELement
+ */
+require_once 'Zend/View/Helper/FormElement.php';
+
+/**
+ * Helper for ordered and unordered lists
+ *
+ * @uses Zend_View_Helper_FormElement
+ * @category   Zend
+ * @package    Zend_View
+ * @subpackage Helper
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ */
+class Zend_View_Helper_HtmlList extends Zend_View_Helper_FormElement
 {
+
     /**
      * Generates a 'List' element.
      *
      * @param array   $items   Array with the elements of the list
      * @param boolean $ordered Specifies ordered/unordered list; default unordered
      * @param array   $attribs Attributes for the ol/ul tag.
-     * @param boolean $escape Escape the items.
      * @return string The list XHTML.
      */
-    public function __invoke(array $items, $ordered = false, $attribs = false, $escape = true)
+    public function htmlList(array $items, $ordered = false, $attribs = false, $escape = true)
     {
+        if (!is_array($items)) {
+            require_once 'Zend/View/Exception.php';
+            $e = new Zend_View_Exception('First param must be an array');
+            $e->setView($this->view);
+            throw $e;
+        }
+
         $list = '';
 
         foreach ($items as $item) {
             if (!is_array($item)) {
                 if ($escape) {
-                    $escaper = $this->view->plugin('escapeHtml');
-                    $item    = $escaper($item);
+                    $item = $this->view->escape($item);
                 }
                 $list .= '<li>' . $item . '</li>' . self::EOL;
             } else {
-                $itemLength = 5 + strlen(self::EOL);
-                if ($itemLength < strlen($list)) {
-                    $list = substr($list, 0, strlen($list) - $itemLength)
-                     . $this($item, $ordered, $attribs, $escape) . '</li>' . self::EOL;
+                if (6 < strlen($list)) {
+                    $list = substr($list, 0, strlen($list) - 6)
+                     . $this->htmlList($item, $ordered, $attribs, $escape) . '</li>' . self::EOL;
                 } else {
-                    $list .= '<li>' . $this($item, $ordered, $attribs, $escape) . '</li>' . self::EOL;
+                    $list .= '<li>' . $this->htmlList($item, $ordered, $attribs, $escape) . '</li>' . self::EOL;
                 }
             }
         }
 
         if ($attribs) {
-            $attribs = $this->htmlAttribs($attribs);
+            $attribs = $this->_htmlAttribs($attribs);
         } else {
             $attribs = '';
         }
 
-        $tag = ($ordered) ? 'ol' : 'ul';
+        $tag = 'ul';
+        if ($ordered) {
+            $tag = 'ol';
+        }
 
         return '<' . $tag . $attribs . '>' . self::EOL . $list . '</' . $tag . '>' . self::EOL;
     }

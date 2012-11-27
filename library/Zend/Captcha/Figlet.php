@@ -1,16 +1,29 @@
 <?php
 /**
- * Zend Framework (http://framework.zend.com/)
+ * Zend Framework
  *
- * @link      http://github.com/zendframework/zf2 for the canonical source repository
- * @copyright Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
- * @license   http://framework.zend.com/license/new-bsd New BSD License
- * @package   Zend_Captcha
+ * LICENSE
+ *
+ * This source file is subject to the new BSD license that is bundled
+ * with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://framework.zend.com/license/new-bsd
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@zend.com so we can send you a copy immediately.
+ *
+ * @category   Zend
+ * @package    Zend_Captcha
+ * @subpackage Adapter
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 
-namespace Zend\Captcha;
+/** @see Zend_Captcha_Word */
+require_once 'Zend/Captcha/Word.php';
 
-use Zend\Text\Figlet\Figlet as FigletManager;
+/** @see Zend_Text_Figlet */
+require_once 'Zend/Text/Figlet.php';
 
 /**
  * Captcha based on figlet text rendering service
@@ -20,35 +33,29 @@ use Zend\Text\Figlet\Figlet as FigletManager;
  * @category   Zend
  * @package    Zend_Captcha
  * @subpackage Adapter
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id: Figlet.php 24593 2012-01-05 20:35:02Z matthew $
  */
-class Figlet extends AbstractWord
+class Zend_Captcha_Figlet extends Zend_Captcha_Word
 {
     /**
      * Figlet text renderer
      *
-     * @var FigletManager
+     * @var Zend_Text_Figlet
      */
-    protected $figlet;
+    protected $_figlet;
 
     /**
      * Constructor
      *
-     * @param  null|string|array|\Traversable $options
+     * @param  null|string|array|Zend_Config $options
+     * @return void
      */
     public function __construct($options = null)
     {
         parent::__construct($options);
-        $this->figlet = new FigletManager($options);
-    }
-
-    /**
-     * Retrieve the composed figlet manager
-     *
-     * @return FigletManager
-     */
-    public function getFiglet()
-    {
-        return $this->figlet;
+        $this->_figlet = new Zend_Text_Figlet($options);
     }
 
     /**
@@ -58,17 +65,21 @@ class Figlet extends AbstractWord
      */
     public function generate()
     {
-        $this->useNumbers = false;
+        $this->_useNumbers = false;
         return parent::generate();
     }
 
     /**
-     * Get helper name used to render captcha
+     * Display the captcha
      *
+     * @param Zend_View_Interface $view
+     * @param mixed $element
      * @return string
      */
-    public function getHelperName()
+    public function render(Zend_View_Interface $view = null, $element = null)
     {
-        return 'captcha/figlet';
+        return '<pre>'
+             . $this->_figlet->render($this->getWord())
+             . "</pre>\n";
     }
 }

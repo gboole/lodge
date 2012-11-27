@@ -1,24 +1,37 @@
 <?php
 /**
- * Zend Framework (http://framework.zend.com/)
+ * Zend Framework
  *
- * @link      http://github.com/zendframework/zf2 for the canonical source repository
- * @copyright Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
- * @license   http://framework.zend.com/license/new-bsd New BSD License
- * @package   Zend_Feed
+ * LICENSE
+ *
+ * This source file is subject to the new BSD license that is bundled
+ * with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://framework.zend.com/license/new-bsd
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@zend.com so we can send you a copy immediately.
+ *
+ * @category   Zend
+ * @package    Zend_Feed_Writer
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id: Entry.php 24593 2012-01-05 20:35:02Z matthew $
  */
 
-namespace Zend\Feed\Writer\Extension\Threading\Renderer;
-
-use DOMDocument;
-use DOMElement;
-use Zend\Feed\Writer\Extension;
+/**
+ * @see Zend_Feed_Writer_Extension_RendererAbstract
+ */
+require_once 'Zend/Feed/Writer/Extension/RendererAbstract.php';
 
 /**
-* @category Zend
-* @package Zend_Feed_Writer
-*/
-class Entry extends Extension\AbstractRenderer
+ * @category   Zend
+ * @package    Zend_Feed_Writer
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ */
+class Zend_Feed_Writer_Extension_Threading_Renderer_Entry
+    extends Zend_Feed_Writer_Extension_RendererAbstract
 {
 
     /**
@@ -28,7 +41,7 @@ class Entry extends Extension\AbstractRenderer
      *
      * @var bool
      */
-    protected $called = false;
+    protected $_called = false;
 
     /**
      * Render entry
@@ -40,10 +53,10 @@ class Entry extends Extension\AbstractRenderer
         if (strtolower($this->getType()) == 'rss') {
             return; // Atom 1.0 only
         }
-        $this->_setCommentLink($this->dom, $this->base);
-        $this->_setCommentFeedLinks($this->dom, $this->base);
-        $this->_setCommentCount($this->dom, $this->base);
-        if ($this->called) {
+        $this->_setCommentLink($this->_dom, $this->_base);
+        $this->_setCommentFeedLinks($this->_dom, $this->_base);
+        $this->_setCommentCount($this->_dom, $this->_base);
+        if ($this->_called) {
             $this->_appendNamespaces();
         }
     }
@@ -72,7 +85,7 @@ class Entry extends Extension\AbstractRenderer
         if (!$link) {
             return;
         }
-        $clink = $this->dom->createElement('link');
+        $clink = $this->_dom->createElement('link');
         $clink->setAttribute('rel', 'replies');
         $clink->setAttribute('type', 'text/html');
         $clink->setAttribute('href', $link);
@@ -81,7 +94,7 @@ class Entry extends Extension\AbstractRenderer
             $clink->setAttribute('thr:count', $count);
         }
         $root->appendChild($clink);
-        $this->called = true;
+        $this->_called = true;
     }
 
     /**
@@ -98,16 +111,16 @@ class Entry extends Extension\AbstractRenderer
             return;
         }
         foreach ($links as $link) {
-            $flink = $this->dom->createElement('link');
+            $flink = $this->_dom->createElement('link');
             $flink->setAttribute('rel', 'replies');
-            $flink->setAttribute('type', 'application/' . $link['type'] . '+xml');
+            $flink->setAttribute('type', 'application/'. $link['type'] .'+xml');
             $flink->setAttribute('href', $link['uri']);
             $count = $this->getDataContainer()->getCommentCount();
             if ($count !== null) {
                 $flink->setAttribute('thr:count', $count);
             }
             $root->appendChild($flink);
-            $this->called = true;
+            $this->_called = true;
         }
     }
 
@@ -124,9 +137,9 @@ class Entry extends Extension\AbstractRenderer
         if ($count === null) {
             return;
         }
-        $tcount = $this->dom->createElement('thr:total');
+        $tcount = $this->_dom->createElement('thr:total');
         $tcount->nodeValue = $count;
         $root->appendChild($tcount);
-        $this->called = true;
+        $this->_called = true;
     }
 }

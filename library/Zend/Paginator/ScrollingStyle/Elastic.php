@@ -1,16 +1,28 @@
 <?php
 /**
- * Zend Framework (http://framework.zend.com/)
+ * Zend Framework
  *
- * @link      http://github.com/zendframework/zf2 for the canonical source repository
- * @copyright Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
- * @license   http://framework.zend.com/license/new-bsd New BSD License
- * @package   Zend_Paginator
+ * LICENSE
+ *
+ * This source file is subject to the new BSD license that is bundled
+ * with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://framework.zend.com/license/new-bsd
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@zend.com so we can send you a copy immediately.
+ *
+ * @category   Zend
+ * @package    Zend_Paginator
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id: Elastic.php 24593 2012-01-05 20:35:02Z matthew $
  */
 
-namespace Zend\Paginator\ScrollingStyle;
-
-use Zend\Paginator\Paginator;
+/**
+ * @see Zend_Paginator_ScrollingStyle_Sliding
+ */
+require_once 'Zend/Paginator/ScrollingStyle/Sliding.php';
 
 /**
  * A Google-like scrolling style.  Incrementally expands the range to about
@@ -20,17 +32,19 @@ use Zend\Paginator\Paginator;
  * @link       http://www.google.com/search?q=Zend+Framework
  * @category   Zend
  * @package    Zend_Paginator
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
-class Elastic extends Sliding
+class Zend_Paginator_ScrollingStyle_Elastic extends Zend_Paginator_ScrollingStyle_Sliding
 {
     /**
      * Returns an array of "local" pages given a page number and range.
      *
-     * @param  Paginator $paginator
+     * @param  Zend_Paginator $paginator
      * @param  integer $pageRange Unused
      * @return array
      */
-    public function getPages(Paginator $paginator, $pageRange = null)
+    public function getPages(Zend_Paginator $paginator, $pageRange = null)
     {
         $pageRange  = $paginator->getPageRange();
         $pageNumber = $paginator->getCurrentPageNumber();
@@ -40,7 +54,7 @@ class Elastic extends Sliding
 
         if ($originalPageRange + $pageNumber - 1 < $pageRange) {
             $pageRange = $originalPageRange + $pageNumber - 1;
-        } elseif ($originalPageRange + $pageNumber - 1 > count($paginator)) {
+        } else if ($originalPageRange + $pageNumber - 1 > count($paginator)) {
             $pageRange = $originalPageRange + count($paginator) - $pageNumber;
         }
 

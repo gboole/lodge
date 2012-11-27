@@ -1,60 +1,71 @@
 <?php
 /**
- * Zend Framework (http://framework.zend.com/)
+ * Zend Framework
  *
- * @link      http://github.com/zendframework/zf2 for the canonical source repository
- * @copyright Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
- * @license   http://framework.zend.com/license/new-bsd New BSD License
- * @package   Zend_Server
+ * LICENSE
+ *
+ * This source file is subject to the new BSD license that is bundled
+ * with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://framework.zend.com/license/new-bsd
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@zend.com so we can send you a copy immediately.
+ *
+ * @category   Zend
+ * @package    Zend_Server
+ * @subpackage Method
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id: Definition.php 24593 2012-01-05 20:35:02Z matthew $
  */
-
-namespace Zend\Server\Method;
-
-use Zend\Server;
 
 /**
  * Method definition metadata
  *
  * @category   Zend
  * @package    Zend_Server
- * @subpackage Zend_Server_Method
+ * @subpackage Method
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
-class Definition
+class Zend_Server_Method_Definition
 {
     /**
-     * @var \Zend\Server\Method\Callback
+     * @var Zend_Server_Method_Callback
      */
-    protected $callback;
+    protected $_callback;
 
     /**
      * @var array
      */
-    protected $invokeArguments = array();
+    protected $_invokeArguments = array();
 
     /**
      * @var string
      */
-    protected $methodHelp = '';
+    protected $_methodHelp = '';
 
     /**
      * @var string
      */
-    protected $name;
+    protected $_name;
 
     /**
      * @var null|object
      */
-    protected $object;
+    protected $_object;
 
     /**
-     * @var array Array of \Zend\Server\Method\Prototype objects
+     * @var array Array of Zend_Server_Method_Prototype objects
      */
-    protected $prototypes = array();
+    protected $_prototypes = array();
 
     /**
      * Constructor
      *
      * @param  null|array $options
+     * @return void
      */
     public function __construct($options = null)
     {
@@ -67,7 +78,7 @@ class Definition
      * Set object state from options
      *
      * @param  array $options
-     * @return \Zend\Server\Method\Definition
+     * @return Zend_Server_Method_Definition
      */
     public function setOptions(array $options)
     {
@@ -84,11 +95,11 @@ class Definition
      * Set method name
      *
      * @param  string $name
-     * @return \Zend\Server\Method\Definition
+     * @return Zend_Server_Method_Definition
      */
     public function setName($name)
     {
-        $this->name = (string) $name;
+        $this->_name = (string) $name;
         return $this;
     }
 
@@ -99,60 +110,62 @@ class Definition
      */
     public function getName()
     {
-        return $this->name;
+        return $this->_name;
     }
 
     /**
      * Set method callback
      *
-     * @param  array|\Zend\Server\Method\Callback $callback
-     * @throws Server\Exception\InvalidArgumentException
-     * @return \Zend\Server\Method\Definition
+     * @param  array|Zend_Server_Method_Callback $callback
+     * @return Zend_Server_Method_Definition
      */
     public function setCallback($callback)
     {
         if (is_array($callback)) {
-            $callback = new Callback($callback);
-        } elseif (!$callback instanceof Callback) {
-            throw new Server\Exception\InvalidArgumentException('Invalid method callback provided');
+            require_once 'Zend/Server/Method/Callback.php';
+            $callback = new Zend_Server_Method_Callback($callback);
+        } elseif (!$callback instanceof Zend_Server_Method_Callback) {
+            require_once 'Zend/Server/Exception.php';
+            throw new Zend_Server_Exception('Invalid method callback provided');
         }
-        $this->callback = $callback;
+        $this->_callback = $callback;
         return $this;
     }
 
     /**
      * Get method callback
      *
-     * @return \Zend\Server\Method\Callback
+     * @return Zend_Server_Method_Callback
      */
     public function getCallback()
     {
-        return $this->callback;
+        return $this->_callback;
     }
 
     /**
      * Add prototype to method definition
      *
-     * @param  array|\Zend\Server\Method\Prototype $prototype
-     * @throws Server\Exception\InvalidArgumentException
-     * @return \Zend\Server\Method\Definition
+     * @param  array|Zend_Server_Method_Prototype $prototype
+     * @return Zend_Server_Method_Definition
      */
     public function addPrototype($prototype)
     {
         if (is_array($prototype)) {
-            $prototype = new Prototype($prototype);
-        } elseif (!$prototype instanceof Prototype) {
-            throw new Server\Exception\InvalidArgumentException('Invalid method prototype provided');
+            require_once 'Zend/Server/Method/Prototype.php';
+            $prototype = new Zend_Server_Method_Prototype($prototype);
+        } elseif (!$prototype instanceof Zend_Server_Method_Prototype) {
+            require_once 'Zend/Server/Exception.php';
+            throw new Zend_Server_Exception('Invalid method prototype provided');
         }
-        $this->prototypes[] = $prototype;
+        $this->_prototypes[] = $prototype;
         return $this;
     }
 
     /**
      * Add multiple prototypes at once
      *
-     * @param  array $prototypes Array of \Zend\Server\Method\Prototype objects or arrays
-     * @return \Zend\Server\Method\Definition
+     * @param  array $prototypes Array of Zend_Server_Method_Prototype objects or arrays
+     * @return Zend_Server_Method_Definition
      */
     public function addPrototypes(array $prototypes)
     {
@@ -165,12 +178,12 @@ class Definition
     /**
      * Set all prototypes at once (overwrites)
      *
-     * @param  array $prototypes Array of \Zend\Server\Method\Prototype objects or arrays
-     * @return \Zend\Server\Method\Definition
+     * @param  array $prototypes Array of Zend_Server_Method_Prototype objects or arrays
+     * @return Zend_Server_Method_Definition
      */
     public function setPrototypes(array $prototypes)
     {
-        $this->prototypes = array();
+        $this->_prototypes = array();
         $this->addPrototypes($prototypes);
         return $this;
     }
@@ -178,22 +191,22 @@ class Definition
     /**
      * Get all prototypes
      *
-     * @return array $prototypes Array of \Zend\Server\Method\Prototype objects or arrays
+     * @return array $prototypes Array of Zend_Server_Method_Prototype objects or arrays
      */
     public function getPrototypes()
     {
-        return $this->prototypes;
+        return $this->_prototypes;
     }
 
     /**
      * Set method help
      *
      * @param  string $methodHelp
-     * @return \Zend\Server\Method\Definition
+     * @return Zend_Server_Method_Definition
      */
     public function setMethodHelp($methodHelp)
     {
-        $this->methodHelp = (string) $methodHelp;
+        $this->_methodHelp = (string) $methodHelp;
         return $this;
     }
 
@@ -204,22 +217,22 @@ class Definition
      */
     public function getMethodHelp()
     {
-        return $this->methodHelp;
+        return $this->_methodHelp;
     }
 
     /**
      * Set object to use with method calls
      *
      * @param  object $object
-     * @throws Server\Exception\InvalidArgumentException
-     * @return \Zend\Server\Method\Definition
+     * @return Zend_Server_Method_Definition
      */
     public function setObject($object)
     {
         if (!is_object($object) && (null !== $object)) {
-            throw new Server\Exception\InvalidArgumentException('Invalid object passed to ' . __CLASS__ . '::' . __METHOD__);
+            require_once 'Zend/Server/Exception.php';
+            throw new Zend_Server_Exception('Invalid object passed to ' . __CLASS__ . '::' . __METHOD__);
         }
-        $this->object = $object;
+        $this->_object = $object;
         return $this;
     }
 
@@ -230,18 +243,18 @@ class Definition
      */
     public function getObject()
     {
-        return $this->object;
+        return $this->_object;
     }
 
     /**
      * Set invoke arguments
      *
      * @param  array $invokeArguments
-     * @return \Zend\Server\Method\Definition
+     * @return Zend_Server_Method_Definition
      */
     public function setInvokeArguments(array $invokeArguments)
     {
-        $this->invokeArguments = $invokeArguments;
+        $this->_invokeArguments = $invokeArguments;
         return $this;
     }
 
@@ -252,7 +265,7 @@ class Definition
      */
     public function getInvokeArguments()
     {
-        return $this->invokeArguments;
+        return $this->_invokeArguments;
     }
 
     /**

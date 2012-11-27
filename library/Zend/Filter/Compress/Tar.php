@@ -1,27 +1,38 @@
 <?php
 /**
- * Zend Framework (http://framework.zend.com/)
+ * Zend Framework
  *
- * @link      http://github.com/zendframework/zf2 for the canonical source repository
- * @copyright Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
- * @license   http://framework.zend.com/license/new-bsd New BSD License
- * @package   Zend_Filter
+ * LICENSE
+ *
+ * This source file is subject to the new BSD license that is bundled
+ * with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://framework.zend.com/license/new-bsd
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@zend.com so we can send you a copy immediately.
+ *
+ * @category   Zend
+ * @package    Zend_Filter
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id: Tar.php 24593 2012-01-05 20:35:02Z matthew $
  */
 
-namespace Zend\Filter\Compress;
-
-use Archive_Tar;
-use RecursiveDirectoryIterator;
-use RecursiveIteratorIterator;
-use Zend\Filter\Exception;
+/**
+ * @see Zend_Filter_Compress_CompressAbstract
+ */
+require_once 'Zend/Filter/Compress/CompressAbstract.php';
 
 /**
  * Compression adapter for Tar
  *
  * @category   Zend
  * @package    Zend_Filter
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
-class Tar extends AbstractCompressionAlgorithm
+class Zend_Filter_Compress_Tar extends Zend_Filter_Compress_CompressAbstract
 {
     /**
      * Compression Options
@@ -32,7 +43,7 @@ class Tar extends AbstractCompressionAlgorithm
      *
      * @var array
      */
-    protected $options = array(
+    protected $_options = array(
         'archive'  => null,
         'target'   => '.',
         'mode'     => null,
@@ -42,14 +53,17 @@ class Tar extends AbstractCompressionAlgorithm
      * Class constructor
      *
      * @param array $options (Optional) Options to set
-     * @throws Exception\ExtensionNotLoadedException if Archive_Tar component not available
      */
     public function __construct($options = null)
     {
         if (!class_exists('Archive_Tar')) {
-            throw new Exception\ExtensionNotLoadedException(
-                'This filter needs PEAR\'s Archive_Tar component. '
-                . 'Ensure loading Archive_Tar (registering autoload or require_once)');
+            require_once 'Zend/Loader.php';
+            try {
+                Zend_Loader::loadClass('Archive_Tar');
+            } catch (Zend_Exception $e) {
+                require_once 'Zend/Filter/Exception.php';
+                throw new Zend_Filter_Exception('This filter needs PEARs Archive_Tar', 0, $e);
+            }
         }
 
         parent::__construct($options);
@@ -62,89 +76,82 @@ class Tar extends AbstractCompressionAlgorithm
      */
     public function getArchive()
     {
-        return $this->options['archive'];
+        return $this->_options['archive'];
     }
 
     /**
      * Sets the archive to use for de-/compression
      *
-     * @param  string $archive Archive to use
-     * @return Tar
+     * @param string $archive Archive to use
+     * @return Zend_Filter_Compress_Tar
      */
     public function setArchive($archive)
     {
-        $archive = str_replace(array('/', '\\'), DIRECTORY_SEPARATOR, (string) $archive);
-        $this->options['archive'] = $archive;
+        $archive = str_replace(array('/', '\\'), DIRECTORY_SEPARATOR, $archive);
+        $this->_options['archive'] = (string) $archive;
 
         return $this;
     }
 
     /**
-     * Returns the set target path
+     * Returns the set targetpath
      *
      * @return string
      */
     public function getTarget()
     {
-        return $this->options['target'];
+        return $this->_options['target'];
     }
 
     /**
-     * Sets the target path to use
+     * Sets the targetpath to use
      *
-     * @param  string $target
-     * @return Tar
-     * @throws Exception\InvalidArgumentException if target path does not exist
+     * @param string $target
+     * @return Zend_Filter_Compress_Tar
      */
     public function setTarget($target)
     {
         if (!file_exists(dirname($target))) {
-            throw new Exception\InvalidArgumentException("The directory '$target' does not exist");
+            require_once 'Zend/Filter/Exception.php';
+            throw new Zend_Filter_Exception("The directory '$target' does not exist");
         }
 
-        $target = str_replace(array('/', '\\'), DIRECTORY_SEPARATOR, (string) $target);
-        $this->options['target'] = $target;
+        $target = str_replace(array('/', '\\'), DIRECTORY_SEPARATOR, $target);
+        $this->_options['target'] = (string) $target;
         return $this;
     }
 
     /**
      * Returns the set compression mode
-     *
-     * @return string
      */
     public function getMode()
     {
-        return $this->options['mode'];
+        return $this->_options['mode'];
     }
 
     /**
      * Compression mode to use
-     *
-     * Either Gz or Bz2.
+     * Eighter Gz or Bz2
      *
      * @param string $mode
-     * @return Tar
-     * @throws Exception\InvalidArgumentException for invalid $mode values
-     * @throws Exception\ExtensionNotLoadedException if bz2 mode selected but extension not loaded
-     * @throws Exception\ExtensionNotLoadedException if gz mode selected but extension not loaded
      */
     public function setMode($mode)
     {
         $mode = ucfirst(strtolower($mode));
         if (($mode != 'Bz2') && ($mode != 'Gz')) {
-            throw new Exception\InvalidArgumentException("The mode '$mode' is unknown");
+            require_once 'Zend/Filter/Exception.php';
+            throw new Zend_Filter_Exception("The mode '$mode' is unknown");
         }
 
         if (($mode == 'Bz2') && (!extension_loaded('bz2'))) {
-            throw new Exception\ExtensionNotLoadedException('This mode needs the bz2 extension');
+            require_once 'Zend/Filter/Exception.php';
+            throw new Zend_Filter_Exception('This mode needs the bz2 extension');
         }
 
         if (($mode == 'Gz') && (!extension_loaded('zlib'))) {
-            throw new Exception\ExtensionNotLoadedException('This mode needs the zlib extension');
+            require_once 'Zend/Filter/Exception.php';
+            throw new Zend_Filter_Exception('This mode needs the zlib extension');
         }
-
-        $this->options['mode'] = $mode;
-        return $this;
     }
 
     /**
@@ -152,8 +159,6 @@ class Tar extends AbstractCompressionAlgorithm
      *
      * @param  string $content
      * @return string
-     * @throws Exception\RuntimeException if unable to create temporary file
-     * @throws Exception\RuntimeException if unable to create archive
      */
     public function compress($content)
     {
@@ -166,7 +171,8 @@ class Tar extends AbstractCompressionAlgorithm
 
             $result = file_put_contents($file, $content);
             if ($result === false) {
-                throw new Exception\RuntimeException('Error creating the temporary file');
+                require_once 'Zend/Filter/Exception.php';
+                throw new Zend_Filter_Exception('Error creating the temporary file');
             }
 
             $content = $file;
@@ -189,7 +195,8 @@ class Tar extends AbstractCompressionAlgorithm
 
         $result  = $archive->create($content);
         if ($result === false) {
-            throw new Exception\RuntimeException('Error creating the Tar archive');
+            require_once 'Zend/Filter/Exception.php';
+            throw new Zend_Filter_Exception('Error creating the Tar archive');
         }
 
         return $this->getArchive();
@@ -199,30 +206,31 @@ class Tar extends AbstractCompressionAlgorithm
      * Decompresses the given content
      *
      * @param  string $content
-     * @return string
-     * @throws Exception\RuntimeException if unable to find archive
-     * @throws Exception\RuntimeException if error occurs decompressing archive
+     * @return boolean
      */
     public function decompress($content)
     {
         $archive = $this->getArchive();
-        if (empty($archive) || !file_exists($archive)) {
-            throw new Exception\RuntimeException('Tar Archive not found');
+        if (file_exists($content)) {
+            $archive = str_replace(array('/', '\\'), DIRECTORY_SEPARATOR, realpath($content));
+        } elseif (empty($archive) || !file_exists($archive)) {
+            require_once 'Zend/Filter/Exception.php';
+            throw new Zend_Filter_Exception('Tar Archive not found');
         }
 
-        $archive = str_replace(array('/', '\\'), DIRECTORY_SEPARATOR, realpath($content));
         $archive = new Archive_Tar($archive, $this->getMode());
         $target  = $this->getTarget();
         if (!is_dir($target)) {
-            $target = dirname($target) . DIRECTORY_SEPARATOR;
+            $target = dirname($target);
         }
 
         $result = $archive->extract($target);
         if ($result === false) {
-            throw new Exception\RuntimeException('Error while extracting the Tar archive');
+            require_once 'Zend/Filter/Exception.php';
+            throw new Zend_Filter_Exception('Error while extracting the Tar archive');
         }
 
-        return $target;
+        return true;
     }
 
     /**

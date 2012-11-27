@@ -1,20 +1,35 @@
 <?php
 /**
- * Zend Framework (http://framework.zend.com/)
+ * Zend Framework
  *
- * @link      http://github.com/zendframework/zf2 for the canonical source repository
- * @copyright Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
- * @license   http://framework.zend.com/license/new-bsd New BSD License
- * @package   Zend_Soap
+ * LICENSE
+ *
+ * This source file is subject to the new BSD license that is bundled
+ * with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://framework.zend.com/license/new-bsd
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@zend.com so we can send you a copy immediately.
+ *
+ * @category   Zend
+ * @package    Zend_Soap
+ * @subpackage Client
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id: Local.php 25033 2012-08-17 19:50:08Z matthew $
  */
 
-namespace Zend\Soap\Client;
+/** Zend_Soap_Server */
+require_once 'Zend/Soap/Server.php';
 
-use Zend\Soap\Client as SOAPClient;
-use Zend\Soap\Server as SOAPServer;
+/** Zend_Soap_Client */
+require_once 'Zend/Soap/Client.php';
+
+if (extension_loaded('soap')) {
 
 /**
- * \Zend\Soap\Client\Local
+ * Zend_Soap_Client_Local
  *
  * Class is intended to be used as local SOAP client which works
  * with a provided Server object.
@@ -25,25 +40,25 @@ use Zend\Soap\Server as SOAPServer;
  * @package    Zend_Soap
  * @subpackage Client
  */
-class Local extends SOAPClient
+class Zend_Soap_Client_Local extends Zend_Soap_Client
 {
     /**
      * Server object
      *
-     * @var \Zend\Soap\Server
+     * @var Zend_Soap_Server
      */
-    protected $server;
+    protected $_server;
 
     /**
      * Local client constructor
      *
-     * @param \Zend\Soap\Server $server
+     * @param Zend_Soap_Server $server
      * @param string $wsdl
      * @param array $options
      */
-    public function __construct(SOAPServer $server, $wsdl, $options = null)
+    function __construct(Zend_Soap_Server $server, $wsdl, $options = null)
     {
-        $this->server = $server;
+        $this->_server = $server;
 
         // Use Server specified SOAP version as default
         $this->setSoapVersion($server->getSoapVersion());
@@ -55,7 +70,7 @@ class Local extends SOAPClient
      * Actual "do request" method.
      *
      * @internal
-     * @param \Zend\Soap\Client\Common $client
+     * @param Zend_Soap_Client_Common $client
      * @param string $request
      * @param string $location
      * @param string $action
@@ -63,13 +78,13 @@ class Local extends SOAPClient
      * @param int    $one_way
      * @return mixed
      */
-    public function _doRequest(Common $client, $request, $location, $action, $version, $one_way = null)
+    public function _doRequest(Zend_Soap_Client_Common $client, $request, $location, $action, $version, $one_way = null)
     {
         // Perform request as is
         ob_start();
-        $this->server->handle($request);
+        $this->_server->handle($request);
         $response = ob_get_clean();
-
+ 
         if ($response === null || $response === '') {
             $serverResponse = $this->server->getResponse();
             if ($serverResponse !== null) {
@@ -80,3 +95,5 @@ class Local extends SOAPClient
         return $response;
     }
 }
+
+} // end if (extension_loaded('soap')

@@ -1,26 +1,56 @@
 <?php
 /**
- * Zend Framework (http://framework.zend.com/)
+ * Zend Framework
  *
- * @link      http://github.com/zendframework/zf2 for the canonical source repository
- * @copyright Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
- * @license   http://framework.zend.com/license/new-bsd New BSD License
- * @package   Zend_Feed
+ * LICENSE
+ *
+ * This source file is subject to the new BSD license that is bundled
+ * with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://framework.zend.com/license/new-bsd
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@zend.com so we can send you a copy immediately.
+ *
+ * @category   Zend
+ * @package    Zend_Feed_Reader
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id: Rss.php 24593 2012-01-05 20:35:02Z matthew $
  */
 
-namespace Zend\Feed\Reader\Feed;
-
-use DateTime;
-use DOMDocument;
-use Zend\Feed\Reader;
-use Zend\Feed\Reader\Collection;
-use Zend\Feed\Reader\Exception;
+/**
+ * @see Zend_Feed_Reader_FeedAbstract
+ */
+require_once 'Zend/Feed/Reader/FeedAbstract.php';
 
 /**
-* @category Zend
-* @package Reader
-*/
-class Rss extends AbstractFeed
+ * @see Zend_feed_Reader_Extension_Atom_Feed
+ */
+require_once 'Zend/Feed/Reader/Extension/Atom/Feed.php';
+
+/**
+ * @see Zend_Feed_Reader_Extension_DublinCore_Feed
+ */
+require_once 'Zend/Feed/Reader/Extension/DublinCore/Feed.php';
+
+/**
+ * @see Zend_Date
+ */
+require_once 'Zend/Date.php';
+
+/**
+ * @see Zend_Feed_Reader_Collection_Author
+ */
+require_once 'Zend/Feed/Reader/Collection/Author.php';
+
+/**
+ * @category   Zend
+ * @package    Zend_Feed_Reader
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ */
+class Zend_Feed_Reader_Feed_Rss extends Zend_Feed_Reader_FeedAbstract
 {
 
     /**
@@ -29,32 +59,21 @@ class Rss extends AbstractFeed
      * @param  DOMDocument $dom
      * @param  string $type
      */
-    public function __construct(DOMDocument $dom, $type = null)
+    public function __construct(DomDocument $dom, $type = null)
     {
         parent::__construct($dom, $type);
 
-        $manager = Reader\Reader::getExtensionManager();
+        $dublinCoreClass = Zend_Feed_Reader::getPluginLoader()->getClassName('DublinCore_Feed');
+        $this->_extensions['DublinCore_Feed'] = new $dublinCoreClass($dom, $this->_data['type'], $this->_xpath);
+        $atomClass = Zend_Feed_Reader::getPluginLoader()->getClassName('Atom_Feed');
+        $this->_extensions['Atom_Feed'] = new $atomClass($dom, $this->_data['type'], $this->_xpath);
 
-        $feed = $manager->get('DublinCore\Feed');
-        $feed->setDomDocument($dom);
-        $feed->setType($this->data['type']);
-        $feed->setXpath($this->xpath);
-        $this->extensions['DublinCore\Feed'] = $feed;
-
-        $feed = $manager->get('Atom\Feed');
-        $feed->setDomDocument($dom);
-        $feed->setType($this->data['type']);
-        $feed->setXpath($this->xpath);
-        $this->extensions['Atom\Feed'] = $feed;
-
-        if ($this->getType() !== Reader\Reader::TYPE_RSS_10
-            && $this->getType() !== Reader\Reader::TYPE_RSS_090
-        ) {
+        if ($this->getType() !== Zend_Feed_Reader::TYPE_RSS_10 && $this->getType() !== Zend_Feed_Reader::TYPE_RSS_090) {
             $xpathPrefix = '/rss/channel';
         } else {
             $xpathPrefix = '/rdf:RDF/rss:channel';
         }
-        foreach ($this->extensions as $extension) {
+        foreach ($this->_extensions as $extension) {
             $extension->setXpathPrefix($xpathPrefix);
         }
     }
@@ -83,8 +102,8 @@ class Rss extends AbstractFeed
      */
     public function getAuthors()
     {
-        if (array_key_exists('authors', $this->data)) {
-            return $this->data['authors'];
+        if (array_key_exists('authors', $this->_data)) {
+            return $this->_data['authors'];
         }
 
         $authors = array();
@@ -101,11 +120,11 @@ class Rss extends AbstractFeed
          * Technically RSS doesn't specific author element use at the feed level
          * but it's supported on a "just in case" basis.
          */
-        if ($this->getType() !== Reader\Reader::TYPE_RSS_10
-        && $this->getType() !== Reader\Reader::TYPE_RSS_090) {
-            $list = $this->xpath->query('//author');
+        if ($this->getType() !== Zend_Feed_Reader::TYPE_RSS_10
+        && $this->getType() !== Zend_Feed_Reader::TYPE_RSS_090) {
+            $list = $this->_xpath->query('//author');
         } else {
-            $list = $this->xpath->query('//rss:author');
+            $list = $this->_xpath->query('//rss:author');
         }
         if ($list->length) {
             foreach ($list as $author) {
@@ -127,8 +146,8 @@ class Rss extends AbstractFeed
         if (count($authors) == 0) {
             $authors = $this->getExtension('Atom')->getAuthors();
         } else {
-            $authors = new Reader\Collection\Author(
-                Reader\Reader::arrayUnique($authors)
+            $authors = new Zend_Feed_Reader_Collection_Author(
+                Zend_Feed_Reader::arrayUnique($authors)
             );
         }
 
@@ -136,9 +155,9 @@ class Rss extends AbstractFeed
             $authors = null;
         }
 
-        $this->data['authors'] = $authors;
+        $this->_data['authors'] = $authors;
 
-        return $this->data['authors'];
+        return $this->_data['authors'];
     }
 
     /**
@@ -148,15 +167,15 @@ class Rss extends AbstractFeed
      */
     public function getCopyright()
     {
-        if (array_key_exists('copyright', $this->data)) {
-            return $this->data['copyright'];
+        if (array_key_exists('copyright', $this->_data)) {
+            return $this->_data['copyright'];
         }
 
         $copyright = null;
 
-        if ($this->getType() !== Reader\Reader::TYPE_RSS_10 &&
-            $this->getType() !== Reader\Reader::TYPE_RSS_090) {
-            $copyright = $this->xpath->evaluate('string(/rss/channel/copyright)');
+        if ($this->getType() !== Zend_Feed_Reader::TYPE_RSS_10 &&
+            $this->getType() !== Zend_Feed_Reader::TYPE_RSS_090) {
+            $copyright = $this->_xpath->evaluate('string(/rss/channel/copyright)');
         }
 
         if (!$copyright && $this->getExtension('DublinCore') !== null) {
@@ -171,9 +190,9 @@ class Rss extends AbstractFeed
             $copyright = null;
         }
 
-        $this->data['copyright'] = $copyright;
+        $this->_data['copyright'] = $copyright;
 
-        return $this->data['copyright'];
+        return $this->_data['copyright'];
     }
 
     /**
@@ -189,38 +208,39 @@ class Rss extends AbstractFeed
     /**
      * Get the feed modification date
      *
-     * @return DateTime
-     * @throws Exception\RuntimeException
+     * @return Zend_Date
      */
     public function getDateModified()
     {
-        if (array_key_exists('datemodified', $this->data)) {
-            return $this->data['datemodified'];
+        if (array_key_exists('datemodified', $this->_data)) {
+            return $this->_data['datemodified'];
         }
 
         $dateModified = null;
         $date = null;
 
-        if ($this->getType() !== Reader\Reader::TYPE_RSS_10 &&
-            $this->getType() !== Reader\Reader::TYPE_RSS_090) {
-            $dateModified = $this->xpath->evaluate('string(/rss/channel/pubDate)');
+        if ($this->getType() !== Zend_Feed_Reader::TYPE_RSS_10 &&
+            $this->getType() !== Zend_Feed_Reader::TYPE_RSS_090) {
+            $dateModified = $this->_xpath->evaluate('string(/rss/channel/pubDate)');
             if (!$dateModified) {
-                $dateModified = $this->xpath->evaluate('string(/rss/channel/lastBuildDate)');
+                $dateModified = $this->_xpath->evaluate('string(/rss/channel/lastBuildDate)');
             }
             if ($dateModified) {
                 $dateModifiedParsed = strtotime($dateModified);
                 if ($dateModifiedParsed) {
-                    $date = new DateTime('@' . $dateModifiedParsed);
+                    $date = new Zend_Date($dateModifiedParsed);
                 } else {
-                    $dateStandards = array(DateTime::RSS, DateTime::RFC822,
-                                           DateTime::RFC2822, null);
+                    $dateStandards = array(Zend_Date::RSS, Zend_Date::RFC_822,
+                    Zend_Date::RFC_2822, Zend_Date::DATES);
+                    $date = new Zend_Date;
                     foreach ($dateStandards as $standard) {
                         try {
-                            $date = DateTime::createFromFormat($standard, $dateModified);
+                            $date->set($dateModified, $standard);
                             break;
-                        } catch (\Exception $e) {
-                            if ($standard == null) {
-                                throw new Exception\RuntimeException(
+                        } catch (Zend_Date_Exception $e) {
+                            if ($standard == Zend_Date::DATES) {
+                                require_once 'Zend/Feed/Exception.php';
+                                throw new Zend_Feed_Exception(
                                     'Could not load date due to unrecognised'
                                     .' format (should follow RFC 822 or 2822):'
                                     . $e->getMessage(),
@@ -245,43 +265,44 @@ class Rss extends AbstractFeed
             $date = null;
         }
 
-        $this->data['datemodified'] = $date;
+        $this->_data['datemodified'] = $date;
 
-        return $this->data['datemodified'];
+        return $this->_data['datemodified'];
     }
 
     /**
      * Get the feed lastBuild date
      *
-     * @throws Exception\RuntimeException
-     * @return DateTime
+     * @return Zend_Date
      */
     public function getLastBuildDate()
     {
-        if (array_key_exists('lastBuildDate', $this->data)) {
-            return $this->data['lastBuildDate'];
+        if (array_key_exists('lastBuildDate', $this->_data)) {
+            return $this->_data['lastBuildDate'];
         }
 
         $lastBuildDate = null;
         $date = null;
 
-        if ($this->getType() !== Reader\Reader::TYPE_RSS_10 &&
-            $this->getType() !== Reader\Reader::TYPE_RSS_090) {
-            $lastBuildDate = $this->xpath->evaluate('string(/rss/channel/lastBuildDate)');
+        if ($this->getType() !== Zend_Feed_Reader::TYPE_RSS_10 &&
+            $this->getType() !== Zend_Feed_Reader::TYPE_RSS_090) {
+            $lastBuildDate = $this->_xpath->evaluate('string(/rss/channel/lastBuildDate)');
             if ($lastBuildDate) {
                 $lastBuildDateParsed = strtotime($lastBuildDate);
                 if ($lastBuildDateParsed) {
-                    $date = new DateTime('@' . $lastBuildDateParsed);
+                    $date = new Zend_Date($lastBuildDateParsed);
                 } else {
-                    $dateStandards = array(DateTime::RSS, DateTime::RFC822,
-                                           DateTime::RFC2822, null);
+                    $dateStandards = array(Zend_Date::RSS, Zend_Date::RFC_822,
+                    Zend_Date::RFC_2822, Zend_Date::DATES);
+                    $date = new Zend_Date;
                     foreach ($dateStandards as $standard) {
                         try {
-                            $date = DateTime::createFromFormat($standard, $lastBuildDateParsed);
+                            $date->set($lastBuildDate, $standard);
                             break;
-                        } catch (\Exception $e) {
-                            if ($standard == null) {
-                                throw new Exception\RuntimeException(
+                        } catch (Zend_Date_Exception $e) {
+                            if ($standard == Zend_Date::DATES) {
+                                require_once 'Zend/Feed/Exception.php';
+                                throw new Zend_Feed_Exception(
                                     'Could not load date due to unrecognised'
                                     .' format (should follow RFC 822 or 2822):'
                                     . $e->getMessage(),
@@ -298,9 +319,9 @@ class Rss extends AbstractFeed
             $date = null;
         }
 
-        $this->data['lastBuildDate'] = $date;
+        $this->_data['lastBuildDate'] = $date;
 
-        return $this->data['lastBuildDate'];
+        return $this->_data['lastBuildDate'];
     }
 
     /**
@@ -310,17 +331,17 @@ class Rss extends AbstractFeed
      */
     public function getDescription()
     {
-        if (array_key_exists('description', $this->data)) {
-            return $this->data['description'];
+        if (array_key_exists('description', $this->_data)) {
+            return $this->_data['description'];
         }
 
         $description = null;
 
-        if ($this->getType() !== Reader\Reader::TYPE_RSS_10 &&
-            $this->getType() !== Reader\Reader::TYPE_RSS_090) {
-            $description = $this->xpath->evaluate('string(/rss/channel/description)');
+        if ($this->getType() !== Zend_Feed_Reader::TYPE_RSS_10 &&
+            $this->getType() !== Zend_Feed_Reader::TYPE_RSS_090) {
+            $description = $this->_xpath->evaluate('string(/rss/channel/description)');
         } else {
-            $description = $this->xpath->evaluate('string(/rdf:RDF/rss:channel/rss:description)');
+            $description = $this->_xpath->evaluate('string(/rdf:RDF/rss:channel/rss:description)');
         }
 
         if (!$description && $this->getExtension('DublinCore') !== null) {
@@ -335,9 +356,9 @@ class Rss extends AbstractFeed
             $description = null;
         }
 
-        $this->data['description'] = $description;
+        $this->_data['description'] = $description;
 
-        return $this->data['description'];
+        return $this->_data['description'];
     }
 
     /**
@@ -347,15 +368,15 @@ class Rss extends AbstractFeed
      */
     public function getId()
     {
-        if (array_key_exists('id', $this->data)) {
-            return $this->data['id'];
+        if (array_key_exists('id', $this->_data)) {
+            return $this->_data['id'];
         }
 
         $id = null;
 
-        if ($this->getType() !== Reader\Reader::TYPE_RSS_10 &&
-            $this->getType() !== Reader\Reader::TYPE_RSS_090) {
-            $id = $this->xpath->evaluate('string(/rss/channel/guid)');
+        if ($this->getType() !== Zend_Feed_Reader::TYPE_RSS_10 &&
+            $this->getType() !== Zend_Feed_Reader::TYPE_RSS_090) {
+            $id = $this->_xpath->evaluate('string(/rss/channel/guid)');
         }
 
         if (!$id && $this->getExtension('DublinCore') !== null) {
@@ -376,9 +397,9 @@ class Rss extends AbstractFeed
             }
         }
 
-        $this->data['id'] = $id;
+        $this->_data['id'] = $id;
 
-        return $this->data['id'];
+        return $this->_data['id'];
     }
 
     /**
@@ -388,41 +409,41 @@ class Rss extends AbstractFeed
      */
     public function getImage()
     {
-        if (array_key_exists('image', $this->data)) {
-            return $this->data['image'];
+        if (array_key_exists('image', $this->_data)) {
+            return $this->_data['image'];
         }
 
-        if ($this->getType() !== Reader\Reader::TYPE_RSS_10 &&
-            $this->getType() !== Reader\Reader::TYPE_RSS_090) {
-            $list = $this->xpath->query('/rss/channel/image');
+        if ($this->getType() !== Zend_Feed_Reader::TYPE_RSS_10 &&
+            $this->getType() !== Zend_Feed_Reader::TYPE_RSS_090) {
+            $list = $this->_xpath->query('/rss/channel/image');
             $prefix = '/rss/channel/image[1]';
         } else {
-            $list = $this->xpath->query('/rdf:RDF/rss:channel/rss:image');
+            $list = $this->_xpath->query('/rdf:RDF/rss:channel/rss:image');
             $prefix = '/rdf:RDF/rss:channel/rss:image[1]';
         }
         if ($list->length > 0) {
             $image = array();
-            $value = $this->xpath->evaluate('string(' . $prefix . '/url)');
+            $value = $this->_xpath->evaluate('string(' . $prefix . '/url)');
             if ($value) {
                 $image['uri'] = $value;
             }
-            $value = $this->xpath->evaluate('string(' . $prefix . '/link)');
+            $value = $this->_xpath->evaluate('string(' . $prefix . '/link)');
             if ($value) {
                 $image['link'] = $value;
             }
-            $value = $this->xpath->evaluate('string(' . $prefix . '/title)');
+            $value = $this->_xpath->evaluate('string(' . $prefix . '/title)');
             if ($value) {
                 $image['title'] = $value;
             }
-            $value = $this->xpath->evaluate('string(' . $prefix . '/height)');
+            $value = $this->_xpath->evaluate('string(' . $prefix . '/height)');
             if ($value) {
                 $image['height'] = $value;
             }
-            $value = $this->xpath->evaluate('string(' . $prefix . '/width)');
+            $value = $this->_xpath->evaluate('string(' . $prefix . '/width)');
             if ($value) {
                 $image['width'] = $value;
             }
-            $value = $this->xpath->evaluate('string(' . $prefix . '/description)');
+            $value = $this->_xpath->evaluate('string(' . $prefix . '/description)');
             if ($value) {
                 $image['description'] = $value;
             }
@@ -430,9 +451,9 @@ class Rss extends AbstractFeed
             $image = null;
         }
 
-        $this->data['image'] = $image;
+        $this->_data['image'] = $image;
 
-        return $this->data['image'];
+        return $this->_data['image'];
     }
 
     /**
@@ -442,15 +463,15 @@ class Rss extends AbstractFeed
      */
     public function getLanguage()
     {
-        if (array_key_exists('language', $this->data)) {
-            return $this->data['language'];
+        if (array_key_exists('language', $this->_data)) {
+            return $this->_data['language'];
         }
 
         $language = null;
 
-        if ($this->getType() !== Reader\Reader::TYPE_RSS_10 &&
-            $this->getType() !== Reader\Reader::TYPE_RSS_090) {
-            $language = $this->xpath->evaluate('string(/rss/channel/language)');
+        if ($this->getType() !== Zend_Feed_Reader::TYPE_RSS_10 &&
+            $this->getType() !== Zend_Feed_Reader::TYPE_RSS_090) {
+            $language = $this->_xpath->evaluate('string(/rss/channel/language)');
         }
 
         if (!$language && $this->getExtension('DublinCore') !== null) {
@@ -462,16 +483,16 @@ class Rss extends AbstractFeed
         }
 
         if (!$language) {
-            $language = $this->xpath->evaluate('string(//@xml:lang[1])');
+            $language = $this->_xpath->evaluate('string(//@xml:lang[1])');
         }
 
         if (!$language) {
             $language = null;
         }
 
-        $this->data['language'] = $language;
+        $this->_data['language'] = $language;
 
-        return $this->data['language'];
+        return $this->_data['language'];
     }
 
     /**
@@ -481,17 +502,17 @@ class Rss extends AbstractFeed
      */
     public function getLink()
     {
-        if (array_key_exists('link', $this->data)) {
-            return $this->data['link'];
+        if (array_key_exists('link', $this->_data)) {
+            return $this->_data['link'];
         }
 
         $link = null;
 
-        if ($this->getType() !== Reader\Reader::TYPE_RSS_10 &&
-            $this->getType() !== Reader\Reader::TYPE_RSS_090) {
-            $link = $this->xpath->evaluate('string(/rss/channel/link)');
+        if ($this->getType() !== Zend_Feed_Reader::TYPE_RSS_10 &&
+            $this->getType() !== Zend_Feed_Reader::TYPE_RSS_090) {
+            $link = $this->_xpath->evaluate('string(/rss/channel/link)');
         } else {
-            $link = $this->xpath->evaluate('string(/rdf:RDF/rss:channel/rss:link)');
+            $link = $this->_xpath->evaluate('string(/rdf:RDF/rss:channel/rss:link)');
         }
 
         if (empty($link)) {
@@ -502,9 +523,9 @@ class Rss extends AbstractFeed
             $link = null;
         }
 
-        $this->data['link'] = $link;
+        $this->_data['link'] = $link;
 
-        return $this->data['link'];
+        return $this->_data['link'];
     }
 
     /**
@@ -514,8 +535,8 @@ class Rss extends AbstractFeed
      */
     public function getFeedLink()
     {
-        if (array_key_exists('feedlink', $this->data)) {
-            return $this->data['feedlink'];
+        if (array_key_exists('feedlink', $this->_data)) {
+            return $this->_data['feedlink'];
         }
 
         $link = null;
@@ -526,9 +547,9 @@ class Rss extends AbstractFeed
             $link = $this->getOriginalSourceUri();
         }
 
-        $this->data['feedlink'] = $link;
+        $this->_data['feedlink'] = $link;
 
-        return $this->data['feedlink'];
+        return $this->_data['feedlink'];
     }
 
     /**
@@ -538,23 +559,23 @@ class Rss extends AbstractFeed
      */
     public function getGenerator()
     {
-        if (array_key_exists('generator', $this->data)) {
-            return $this->data['generator'];
+        if (array_key_exists('generator', $this->_data)) {
+            return $this->_data['generator'];
         }
 
         $generator = null;
 
-        if ($this->getType() !== Reader\Reader::TYPE_RSS_10 &&
-            $this->getType() !== Reader\Reader::TYPE_RSS_090) {
-            $generator = $this->xpath->evaluate('string(/rss/channel/generator)');
+        if ($this->getType() !== Zend_Feed_Reader::TYPE_RSS_10 &&
+            $this->getType() !== Zend_Feed_Reader::TYPE_RSS_090) {
+            $generator = $this->_xpath->evaluate('string(/rss/channel/generator)');
         }
 
         if (!$generator) {
-            if ($this->getType() !== Reader\Reader::TYPE_RSS_10 &&
-            $this->getType() !== Reader\Reader::TYPE_RSS_090) {
-                $generator = $this->xpath->evaluate('string(/rss/channel/atom:generator)');
+            if ($this->getType() !== Zend_Feed_Reader::TYPE_RSS_10 &&
+            $this->getType() !== Zend_Feed_Reader::TYPE_RSS_090) {
+                $generator = $this->_xpath->evaluate('string(/rss/channel/atom:generator)');
             } else {
-                $generator = $this->xpath->evaluate('string(/rdf:RDF/rss:channel/atom:generator)');
+                $generator = $this->_xpath->evaluate('string(/rdf:RDF/rss:channel/atom:generator)');
             }
         }
 
@@ -566,9 +587,9 @@ class Rss extends AbstractFeed
             $generator = null;
         }
 
-        $this->data['generator'] = $generator;
+        $this->_data['generator'] = $generator;
 
-        return $this->data['generator'];
+        return $this->_data['generator'];
     }
 
     /**
@@ -578,17 +599,17 @@ class Rss extends AbstractFeed
      */
     public function getTitle()
     {
-        if (array_key_exists('title', $this->data)) {
-            return $this->data['title'];
+        if (array_key_exists('title', $this->_data)) {
+            return $this->_data['title'];
         }
 
         $title = null;
 
-        if ($this->getType() !== Reader\Reader::TYPE_RSS_10 &&
-            $this->getType() !== Reader\Reader::TYPE_RSS_090) {
-            $title = $this->xpath->evaluate('string(/rss/channel/title)');
+        if ($this->getType() !== Zend_Feed_Reader::TYPE_RSS_10 &&
+            $this->getType() !== Zend_Feed_Reader::TYPE_RSS_090) {
+            $title = $this->_xpath->evaluate('string(/rss/channel/title)');
         } else {
-            $title = $this->xpath->evaluate('string(/rdf:RDF/rss:channel/rss:title)');
+            $title = $this->_xpath->evaluate('string(/rdf:RDF/rss:channel/rss:title)');
         }
 
         if (!$title && $this->getExtension('DublinCore') !== null) {
@@ -603,9 +624,9 @@ class Rss extends AbstractFeed
             $title = null;
         }
 
-        $this->data['title'] = $title;
+        $this->_data['title'] = $title;
 
-        return $this->data['title'];
+        return $this->_data['title'];
     }
 
     /**
@@ -615,8 +636,8 @@ class Rss extends AbstractFeed
      */
     public function getHubs()
     {
-        if (array_key_exists('hubs', $this->data)) {
-            return $this->data['hubs'];
+        if (array_key_exists('hubs', $this->_data)) {
+            return $this->_data['hubs'];
         }
 
         $hubs = $this->getExtension('Atom')->getHubs();
@@ -627,31 +648,31 @@ class Rss extends AbstractFeed
             $hubs = array_unique($hubs);
         }
 
-        $this->data['hubs'] = $hubs;
+        $this->_data['hubs'] = $hubs;
 
-        return $this->data['hubs'];
+        return $this->_data['hubs'];
     }
 
     /**
      * Get all categories
      *
-     * @return Reader\Collection\Category
+     * @return Zend_Feed_Reader_Collection_Category
      */
     public function getCategories()
     {
-        if (array_key_exists('categories', $this->data)) {
-            return $this->data['categories'];
+        if (array_key_exists('categories', $this->_data)) {
+            return $this->_data['categories'];
         }
 
-        if ($this->getType() !== Reader\Reader::TYPE_RSS_10 &&
-            $this->getType() !== Reader\Reader::TYPE_RSS_090) {
-            $list = $this->xpath->query('/rss/channel//category');
+        if ($this->getType() !== Zend_Feed_Reader::TYPE_RSS_10 &&
+            $this->getType() !== Zend_Feed_Reader::TYPE_RSS_090) {
+            $list = $this->_xpath->query('/rss/channel//category');
         } else {
-            $list = $this->xpath->query('/rdf:RDF/rss:channel//rss:category');
+            $list = $this->_xpath->query('/rdf:RDF/rss:channel//rss:category');
         }
 
         if ($list->length) {
-            $categoryCollection = new Collection\Category;
+            $categoryCollection = new Zend_Feed_Reader_Collection_Category;
             foreach ($list as $category) {
                 $categoryCollection[] = array(
                     'term' => $category->nodeValue,
@@ -667,27 +688,27 @@ class Rss extends AbstractFeed
             $categoryCollection = $this->getExtension('Atom')->getCategories();
         }
 
-        $this->data['categories'] = $categoryCollection;
+        $this->_data['categories'] = $categoryCollection;
 
-        return $this->data['categories'];
+        return $this->_data['categories'];
     }
 
     /**
      * Read all entries to the internal entries array
      *
      */
-    protected function indexEntries()
+    protected function _indexEntries()
     {
         $entries = array();
 
-        if ($this->getType() !== Reader\Reader::TYPE_RSS_10 && $this->getType() !== Reader\Reader::TYPE_RSS_090) {
-            $entries = $this->xpath->evaluate('//item');
+        if ($this->getType() !== Zend_Feed_Reader::TYPE_RSS_10 && $this->getType() !== Zend_Feed_Reader::TYPE_RSS_090) {
+            $entries = $this->_xpath->evaluate('//item');
         } else {
-            $entries = $this->xpath->evaluate('//rss:item');
+            $entries = $this->_xpath->evaluate('//rss:item');
         }
 
-        foreach ($entries as $index=>$entry) {
-            $this->entries[$index] = $entry;
+        foreach($entries as $index=>$entry) {
+            $this->_entries[$index] = $entry;
         }
     }
 
@@ -695,17 +716,17 @@ class Rss extends AbstractFeed
      * Register the default namespaces for the current feed format
      *
      */
-    protected function registerNamespaces()
+    protected function _registerNamespaces()
     {
-        switch ($this->data['type']) {
-            case Reader\Reader::TYPE_RSS_10:
-                $this->xpath->registerNamespace('rdf', Reader\Reader::NAMESPACE_RDF);
-                $this->xpath->registerNamespace('rss', Reader\Reader::NAMESPACE_RSS_10);
+        switch ($this->_data['type']) {
+            case Zend_Feed_Reader::TYPE_RSS_10:
+                $this->_xpath->registerNamespace('rdf', Zend_Feed_Reader::NAMESPACE_RDF);
+                $this->_xpath->registerNamespace('rss', Zend_Feed_Reader::NAMESPACE_RSS_10);
                 break;
 
-            case Reader\Reader::TYPE_RSS_090:
-                $this->xpath->registerNamespace('rdf', Reader\Reader::NAMESPACE_RDF);
-                $this->xpath->registerNamespace('rss', Reader\Reader::NAMESPACE_RSS_090);
+            case Zend_Feed_Reader::TYPE_RSS_090:
+                $this->_xpath->registerNamespace('rdf', Zend_Feed_Reader::NAMESPACE_RDF);
+                $this->_xpath->registerNamespace('rss', Zend_Feed_Reader::NAMESPACE_RSS_090);
                 break;
         }
     }

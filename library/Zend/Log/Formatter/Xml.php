@@ -1,75 +1,69 @@
 <?php
 /**
- * Zend Framework (http://framework.zend.com/)
+ * Zend Framework
  *
- * @link      http://github.com/zendframework/zf2 for the canonical source repository
- * @copyright Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
- * @license   http://framework.zend.com/license/new-bsd New BSD License
- * @package   Zend_Log
+ * LICENSE
+ *
+ * This source file is subject to the new BSD license that is bundled
+ * with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://framework.zend.com/license/new-bsd
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@zend.com so we can send you a copy immediately.
+ *
+ * @category   Zend
+ * @package    Zend_Log
+ * @subpackage Formatter
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id: Xml.php 24593 2012-01-05 20:35:02Z matthew $
  */
 
-namespace Zend\Log\Formatter;
-
-use DateTime;
-use DOMDocument;
-use DOMElement;
-use Traversable;
-use Zend\Escaper\Escaper;
-use Zend\Stdlib\ArrayUtils;
+/** Zend_Log_Formatter_Abstract */
+require_once 'Zend/Log/Formatter/Abstract.php';
 
 /**
  * @category   Zend
  * @package    Zend_Log
  * @subpackage Formatter
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id: Xml.php 24593 2012-01-05 20:35:02Z matthew $
  */
-class Xml implements FormatterInterface
+class Zend_Log_Formatter_Xml extends Zend_Log_Formatter_Abstract
 {
     /**
      * @var string Name of root element
      */
-    protected $rootElement;
+    protected $_rootElement;
 
     /**
      * @var array Relates XML elements to log data field keys.
      */
-    protected $elementMap;
+    protected $_elementMap;
 
     /**
      * @var string Encoding to use in XML
      */
-    protected $encoding;
-
-    /**
-     * @var Escaper instance
-     */
-    protected $escaper;
-
-    /**
-     * Format specifier for DateTime objects in event data (default: ISO 8601)
-     *
-     * @see http://php.net/manual/en/function.date.php
-     * @var string
-     */
-    protected $dateTimeFormat = self::DEFAULT_DATETIME_FORMAT;
+    protected $_encoding;
 
     /**
      * Class constructor
      * (the default encoding is UTF-8)
      *
-     * @param array|Traversable $options
-     * @return Xml
+     * @param array|Zend_Config $options
+     * @return void
      */
     public function __construct($options = array())
     {
-        if ($options instanceof Traversable) {
-            $options = ArrayUtils::iteratorToArray($options);
-        }
-
-        if (!is_array($options)) {
+        if ($options instanceof Zend_Config) {
+            $options = $options->toArray();
+        } elseif (!is_array($options)) {
             $args = func_get_args();
 
             $options = array(
-                'rootElement' => array_shift($args)
+            	'rootElement' => array_shift($args)
             );
 
             if (count($args)) {
@@ -78,10 +72,6 @@ class Xml implements FormatterInterface
 
             if (count($args)) {
                 $options['encoding'] = array_shift($args);
-            }
-
-            if (count($args)) {
-                $options['dateTimeFormat'] = array_shift($args);
             }
         }
 
@@ -93,16 +83,23 @@ class Xml implements FormatterInterface
             $options['encoding'] = 'UTF-8';
         }
 
-        $this->rootElement = $options['rootElement'];
+        $this->_rootElement = $options['rootElement'];
         $this->setEncoding($options['encoding']);
 
         if (array_key_exists('elementMap', $options)) {
-            $this->elementMap  = $options['elementMap'];
+            $this->_elementMap  = $options['elementMap'];
         }
+    }
 
-        if (array_key_exists('dateTimeFormat', $options)) {
-            $this->setDateTimeFormat($options['dateTimeFormat']);
-        }
+    /**
+	 * Factory for Zend_Log_Formatter_Xml classe
+	 *
+	 * @param array|Zend_Config $options
+	 * @return Zend_Log_Formatter_Xml
+     */
+    public static function factory($options)
+    {
+        return new self($options);
     }
 
     /**
@@ -112,83 +109,49 @@ class Xml implements FormatterInterface
      */
     public function getEncoding()
     {
-        return $this->encoding;
+        return $this->_encoding;
     }
 
     /**
      * Set encoding
      *
-     * @param string $value
-     * @return Xml
+     * @param  string $value
+     * @return Zend_Log_Formatter_Xml
      */
     public function setEncoding($value)
     {
-        $this->encoding = (string) $value;
+        $this->_encoding = (string) $value;
         return $this;
-    }
-
-    /**
-     * Set Escaper instance
-     *
-     * @param  Escaper $escaper
-     * @return Xml
-     */
-    public function setEscaper(Escaper $escaper)
-    {
-        $this->escaper = $escaper;
-        return $this;
-    }
-
-    /**
-     * Get Escaper instance
-     *
-     * Lazy-loads an instance with the current encoding if none registered.
-     *
-     * @return Escaper
-     */
-    public function getEscaper()
-    {
-        if (null === $this->escaper) {
-            $this->setEscaper(new Escaper($this->getEncoding()));
-        }
-        return $this->escaper;
     }
 
     /**
      * Formats data into a single line to be written by the writer.
      *
-     * @param array $event event data
-     * @return string formatted line to write to the log
+     * @param  array    $event    event data
+     * @return string             formatted line to write to the log
      */
     public function format($event)
     {
-        if (isset($event['timestamp']) && $event['timestamp'] instanceof DateTime) {
-            $event['timestamp'] = $event['timestamp']->format($this->getDateTimeFormat());
-        }
-
-        if ($this->elementMap === null) {
+        if ($this->_elementMap === null) {
             $dataToInsert = $event;
         } else {
             $dataToInsert = array();
-            foreach ($this->elementMap as $elementName => $fieldKey) {
+            foreach ($this->_elementMap as $elementName => $fieldKey) {
                 $dataToInsert[$elementName] = $event[$fieldKey];
             }
         }
 
-        $enc     = $this->getEncoding();
-        $escaper = $this->getEscaper();
-        $dom     = new DOMDocument('1.0', $enc);
-        $elt     = $dom->appendChild(new DOMElement($this->rootElement));
+        $enc = $this->getEncoding();
+        $dom = new DOMDocument('1.0', $enc);
+        $elt = $dom->appendChild(new DOMElement($this->_rootElement));
 
         foreach ($dataToInsert as $key => $value) {
-            if (empty($value)
-                || is_scalar($value)
+            if (empty($value) 
+                || is_scalar($value) 
                 || (is_object($value) && method_exists($value,'__toString'))
             ) {
-                if ($key == "message") {
-                    $value = $escaper->escapeHtml($value);
-                } elseif ($key == "extra" && empty($value)) {
-                    continue;
+                if($key == "message") {
+                    $value = htmlspecialchars($value, ENT_COMPAT, $enc);
                 }
                 $elt->appendChild(new DOMElement($key, (string)$value));
             }
@@ -198,22 +161,5 @@ class Xml implements FormatterInterface
         $xml = preg_replace('/<\?xml version="1.0"( encoding="[^\"]*")?\?>\n/u', '', $xml);
 
         return $xml . PHP_EOL;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function getDateTimeFormat()
-    {
-        return $this->dateTimeFormat;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function setDateTimeFormat($dateTimeFormat)
-    {
-        $this->dateTimeFormat = (string) $dateTimeFormat;
-        return $this;
     }
 }

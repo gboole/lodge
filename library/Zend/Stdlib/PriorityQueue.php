@@ -1,35 +1,43 @@
 <?php
 /**
- * Zend Framework (http://framework.zend.com/)
+ * Zend Framework
  *
- * @link      http://github.com/zendframework/zf2 for the canonical source repository
- * @copyright Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
- * @license   http://framework.zend.com/license/new-bsd New BSD License
- * @package   Zend_Stdlib
+ * LICENSE
+ *
+ * This source file is subject to the new BSD license that is bundled
+ * with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://framework.zend.com/license/new-bsd
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@zend.com so we can send you a copy immediately.
+ *
+ * @category   Zend
+ * @package    Zend_Stdlib
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 
-namespace Zend\Stdlib;
-
-use Countable;
-use IteratorAggregate;
-use Serializable;
+require_once 'Zend/Stdlib/SplPriorityQueue.php';
 
 /**
  * Re-usable, serializable priority queue implementation
  *
  * SplPriorityQueue acts as a heap; on iteration, each item is removed from the
- * queue. If you wish to re-use such a queue, you need to clone it first. This
+ * queue. If you wish to re-use such a queue, you need to clone it first. This 
  * makes for some interesting issues if you wish to delete items from the queue,
  * or, as already stated, iterate over it multiple times.
  *
- * This class aggregates items for the queue itself, but also composes an
+ * This class aggregates items for the queue itself, but also composes an 
  * "inner" iterator in the form of an SplPriorityQueue object for performing
  * the actual iteration.
  *
  * @category   Zend
  * @package    Zend_Stdlib
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
-class PriorityQueue implements Countable, IteratorAggregate, Serializable
+class Zend_Stdlib_PriorityQueue implements Countable, IteratorAggregate, Serializable
 {
     const EXTR_DATA     = 0x00000001;
     const EXTR_PRIORITY = 0x00000002;
@@ -39,7 +47,7 @@ class PriorityQueue implements Countable, IteratorAggregate, Serializable
      * Inner queue class to use for iteration
      * @var string
      */
-    protected $queueClass = 'Zend\Stdlib\SplPriorityQueue';
+    protected $queueClass = 'Zend_Stdlib_SplPriorityQueue';
 
     /**
      * Actual items aggregated in the priority queue. Each item is an array
@@ -58,10 +66,10 @@ class PriorityQueue implements Countable, IteratorAggregate, Serializable
      * Insert an item into the queue
      *
      * Priority defaults to 1 (low priority) if none provided.
-     *
-     * @param  mixed $data
-     * @param  int $priority
-     * @return PriorityQueue
+     * 
+     * @param  mixed $data 
+     * @param  int $priority 
+     * @return Zend_Stdlib_PriorityQueue
      */
     public function insert($data, $priority = 1)
     {
@@ -80,11 +88,11 @@ class PriorityQueue implements Countable, IteratorAggregate, Serializable
      * This is different than {@link extract()}; its purpose is to dequeue an
      * item.
      *
-     * This operation is potentially expensive, as it requires
+     * This operation is potentially expensive, as it requires 
      * re-initialization and re-population of the inner queue.
-     *
+     * 
      * Note: this removes the first item matching the provided item found. If
-     * the same item has been added multiple times, it will not remove other
+     * the same item has been added multiple times, it will not remove other 
      * instances.
      *
      * @param  mixed $datum
@@ -113,7 +121,7 @@ class PriorityQueue implements Countable, IteratorAggregate, Serializable
 
     /**
      * Is the queue empty?
-     *
+     * 
      * @return bool
      */
     public function isEmpty()
@@ -123,7 +131,7 @@ class PriorityQueue implements Countable, IteratorAggregate, Serializable
 
     /**
      * How many items are in the queue?
-     *
+     * 
      * @return int
      */
     public function count()
@@ -133,7 +141,7 @@ class PriorityQueue implements Countable, IteratorAggregate, Serializable
 
     /**
      * Peek at the top node in the queue, based on priority.
-     *
+     * 
      * @return mixed
      */
     public function top()
@@ -142,8 +150,8 @@ class PriorityQueue implements Countable, IteratorAggregate, Serializable
     }
 
     /**
-     * Extract a node from the inner queue and sift up
-     *
+     * Extract a node from the inner queue and sift up 
+     * 
      * @return mixed
      */
     public function extract()
@@ -156,11 +164,11 @@ class PriorityQueue implements Countable, IteratorAggregate, Serializable
      *
      * SplPriorityQueue acts as a heap, which typically implies that as items
      * are iterated, they are also removed. This does not work for situations
-     * where the queue may be iterated multiple times. As such, this class
-     * aggregates the values, and also injects an SplPriorityQueue. This method
-     * retrieves the inner queue object, and clones it for purposes of
+     * where the queue may be iterated multiple times. As such, this class 
+     * aggregates the values, and also injects an SplPriorityQueue. This method 
+     * retrieves the inner queue object, and clones it for purposes of 
      * iteration.
-     *
+     * 
      * @return SplPriorityQueue
      */
     public function getIterator()
@@ -171,7 +179,7 @@ class PriorityQueue implements Countable, IteratorAggregate, Serializable
 
     /**
      * Serialize the data structure
-     *
+     * 
      * @return string
      */
     public function serialize()
@@ -180,11 +188,11 @@ class PriorityQueue implements Countable, IteratorAggregate, Serializable
     }
 
     /**
-     * Unserialize a string into a PriorityQueue object
+     * Unserialize a string into a Zend_Stdlib_PriorityQueue object
      *
-     * Serialization format is compatible with {@link Zend\Stdlib\SplPriorityQueue}
-     *
-     * @param  string $data
+     * Serialization format is compatible with {@link Zend_Stdlib_SplPriorityQueue}
+     * 
+     * @param  string $data 
      * @return void
      */
     public function unserialize($data)
@@ -200,8 +208,8 @@ class PriorityQueue implements Countable, IteratorAggregate, Serializable
      * By default, returns only the item data, and in the order registered (not
      * sorted). You may provide one of the EXTR_* flags as an argument, allowing
      * the ability to return priorities or both data and priority.
-     *
-     * @param  int $flag
+     * 
+     * @param  int $flag 
      * @return array
      */
     public function toArray($flag = self::EXTR_DATA)
@@ -209,16 +217,11 @@ class PriorityQueue implements Countable, IteratorAggregate, Serializable
         switch ($flag) {
             case self::EXTR_BOTH:
                 return $this->items;
-                break;
             case self::EXTR_PRIORITY:
-                return array_map(function($item) {
-                    return $item['priority'];
-                }, $this->items);
+                return array_map(array($this, 'returnPriority'), $this->items);
             case self::EXTR_DATA:
             default:
-                return array_map(function($item) {
-                    return $item['data'];
-                }, $this->items);
+                return array_map(array($this, 'returnData'), $this->items);
         }
     }
 
@@ -227,9 +230,9 @@ class PriorityQueue implements Countable, IteratorAggregate, Serializable
      *
      * Please see {@link getIterator()} for details on the necessity of an
      * internal queue class. The class provided should extend SplPriorityQueue.
-     *
-     * @param  string $class
-     * @return PriorityQueue
+     * 
+     * @param  string $class 
+     * @return Zend_Stdlib_PriorityQueue
      */
     public function setInternalQueueClass($class)
     {
@@ -239,8 +242,8 @@ class PriorityQueue implements Countable, IteratorAggregate, Serializable
 
     /**
      * Does the queue contain the given datum?
-     *
-     * @param  mixed $datum
+     * 
+     * @param  mixed $datum 
      * @return bool
      */
     public function contains($datum)
@@ -255,8 +258,8 @@ class PriorityQueue implements Countable, IteratorAggregate, Serializable
 
     /**
      * Does the queue have an item with the given priority?
-     *
-     * @param  int $priority
+     * 
+     * @param  int $priority 
      * @return bool
      */
     public function hasPriority($priority)
@@ -271,17 +274,16 @@ class PriorityQueue implements Countable, IteratorAggregate, Serializable
 
     /**
      * Get the inner priority queue instance
-     *
-     * @throws \DomainException
-     * @return SplPriorityQueue
+     * 
+     * @return Zend_Stdlib_SplPriorityQueue
      */
     protected function getQueue()
     {
         if (null === $this->queue) {
             $this->queue = new $this->queueClass();
-            if (!$this->queue instanceof \SplPriorityQueue) {
-                throw new \DomainException(sprintf(
-                    'PriorityQueue expects an internal queue of type SplPriorityQueue; received "%s"',
+            if (!$this->queue instanceof SplPriorityQueue) {
+                throw new DomainException(sprintf(
+                    'Zend_Stdlib_PriorityQueue expects an internal queue of type SplPriorityQueue; received "%s"',
                     get_class($this->queue)
                 ));
             }
@@ -290,14 +292,28 @@ class PriorityQueue implements Countable, IteratorAggregate, Serializable
     }
 
     /**
-     * Add support for deep cloning
+     * Return priority from an internal item
      *
-     * @return void
+     * Used as a lambda in toArray().
+     * 
+     * @param  array $item 
+     * @return mixed
      */
-    public function __clone()
+    public function returnPriority($item)
     {
-        if (null !== $this->queue) {
-            $this->queue = clone $this->queue;
-        }
+        return $item['priority'];
+    }
+
+    /**
+     * Return data from an internal item
+     *
+     * Used as a lambda in toArray().
+     * 
+     * @param  array $item 
+     * @return mixed
+     */
+    public function returnData($item)
+    {
+        return $item['data'];
     }
 }

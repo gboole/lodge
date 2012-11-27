@@ -1,109 +1,138 @@
 <?php
 /**
- * Zend Framework (http://framework.zend.com/)
+ * Zend Framework
  *
- * @link      http://github.com/zendframework/zf2 for the canonical source repository
- * @copyright Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
- * @license   http://framework.zend.com/license/new-bsd New BSD License
- * @package   Zend_Mail
+ * LICENSE
+ *
+ * This source file is subject to the new BSD license that is bundled
+ * with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://framework.zend.com/license/new-bsd
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@zend.com so we can send you a copy immediately.
+ *
+ * @category   Zend
+ * @package    Zend_Mail
+ * @subpackage Storage
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id: Maildir.php 24593 2012-01-05 20:35:02Z matthew $
  */
 
-namespace Zend\Mail\Storage\Folder;
 
-use Zend\Mail\Storage;
-use Zend\Mail\Storage\Exception;
-use Zend\Stdlib\ErrorHandler;
+/**
+ * @see Zend_Mail_Storage_Folder
+ */
+require_once 'Zend/Mail/Storage/Folder.php';
+
+/**
+ * @see Zend_Mail_Storage_Folder_Interface
+ */
+require_once 'Zend/Mail/Storage/Folder/Interface.php';
+
+/**
+ * @see Zend_Mail_Storage_Maildir
+ */
+require_once 'Zend/Mail/Storage/Maildir.php';
+
 
 /**
  * @category   Zend
  * @package    Zend_Mail
  * @subpackage Storage
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
-class Maildir extends Storage\Maildir implements FolderInterface
+class Zend_Mail_Storage_Folder_Maildir extends Zend_Mail_Storage_Maildir implements Zend_Mail_Storage_Folder_Interface
 {
     /**
-     * root folder for folder structure
-     * @var \Zend\Mail\Storage\Folder
+     * Zend_Mail_Storage_Folder root folder for folder structure
+     * @var Zend_Mail_Storage_Folder
      */
-    protected $rootFolder;
+    protected $_rootFolder;
 
     /**
      * rootdir of folder structure
      * @var string
      */
-    protected $rootdir;
+    protected $_rootdir;
 
     /**
      * name of current folder
      * @var string
      */
-    protected $currentFolder;
+    protected $_currentFolder;
 
     /**
      * delim char for subfolders
      * @var string
      */
-    protected $delim;
+    protected $_delim;
 
     /**
      * Create instance with parameters
      * Supported parameters are:
      *   - dirname rootdir of maildir structure
-     *   - delim   delim char for folder structure, default is '.'
-     *   - folder initial selected folder, default is 'INBOX'
+     *   - delim   delim char for folder structur, default is '.'
+     *   - folder intial selected folder, default is 'INBOX'
      *
-     * @param  $params array mail reader specific parameters
-     * @throws \Zend\Mail\Storage\Exception\InvalidArgumentException
+     * @param array $params mail reader specific parameters
+     * @throws Zend_Mail_Storage_Exception
      */
     public function __construct($params)
     {
         if (is_array($params)) {
-            $params = (object) $params;
+            $params = (object)$params;
         }
 
         if (!isset($params->dirname) || !is_dir($params->dirname)) {
-            throw new Exception\InvalidArgumentException('no valid dirname given in params');
+            /**
+             * @see Zend_Mail_Storage_Exception
+             */
+            require_once 'Zend/Mail/Storage/Exception.php';
+            throw new Zend_Mail_Storage_Exception('no valid dirname given in params');
         }
 
-        $this->rootdir = rtrim($params->dirname, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+        $this->_rootdir = rtrim($params->dirname, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
 
-        $this->delim = isset($params->delim) ? $params->delim : '.';
+        $this->_delim = isset($params->delim) ? $params->delim : '.';
 
         $this->_buildFolderTree();
         $this->selectFolder(!empty($params->folder) ? $params->folder : 'INBOX');
-        $this->has['top'] = true;
-        $this->has['flags'] = true;
+        $this->_has['top'] = true;
+        $this->_has['flags'] = true;
     }
 
     /**
      * find all subfolders and mbox files for folder structure
      *
-     * Result is save in \Zend\Mail\Storage\Folder instances with the root in $this->rootFolder.
+     * Result is save in Zend_Mail_Storage_Folder instances with the root in $this->_rootFolder.
      * $parentFolder and $parentGlobalName are only used internally for recursion.
      *
-     * @throws \Zend\Mail\Storage\Exception\RuntimeException
+     * @return null
+     * @throws Zend_Mail_Storage_Exception
      */
     protected function _buildFolderTree()
     {
-        $this->rootFolder = new Storage\Folder('/', '/', false);
-        $this->rootFolder->INBOX = new Storage\Folder('INBOX', 'INBOX', true);
+        $this->_rootFolder = new Zend_Mail_Storage_Folder('/', '/', false);
+        $this->_rootFolder->INBOX = new Zend_Mail_Storage_Folder('INBOX', 'INBOX', true);
 
-        ErrorHandler::start(E_WARNING);
-        $dh    = opendir($this->rootdir);
-        $error = ErrorHandler::stop();
+        $dh = @opendir($this->_rootdir);
         if (!$dh) {
-            throw new Exception\RuntimeException("can't read folders in maildir", 0, $error);
+            /**
+             * @see Zend_Mail_Storage_Exception
+             */
+            require_once 'Zend/Mail/Storage/Exception.php';
+            throw new Zend_Mail_Storage_Exception("can't read folders in maildir");
         }
         $dirs = array();
-
         while (($entry = readdir($dh)) !== false) {
-
             // maildir++ defines folders must start with .
             if ($entry[0] != '.' || $entry == '.' || $entry == '..') {
                 continue;
             }
-
-            if ($this->_isMaildir($this->rootdir . $entry)) {
+            if ($this->_isMaildir($this->_rootdir . $entry)) {
                 $dirs[] = $entry;
             }
         }
@@ -112,30 +141,38 @@ class Maildir extends Storage\Maildir implements FolderInterface
         sort($dirs);
         $stack = array(null);
         $folderStack = array(null);
-        $parentFolder = $this->rootFolder;
+        $parentFolder = $this->_rootFolder;
         $parent = '.';
 
         foreach ($dirs as $dir) {
             do {
                 if (strpos($dir, $parent) === 0) {
                     $local = substr($dir, strlen($parent));
-                    if (strpos($local, $this->delim) !== false) {
-                        throw new Exception\RuntimeException('error while reading maildir');
+                    if (strpos($local, $this->_delim) !== false) {
+                        /**
+                         * @see Zend_Mail_Storage_Exception
+                         */
+                        require_once 'Zend/Mail/Storage/Exception.php';
+                        throw new Zend_Mail_Storage_Exception('error while reading maildir');
                     }
                     array_push($stack, $parent);
-                    $parent = $dir . $this->delim;
-                    $folder = new Storage\Folder($local, substr($dir, 1), true);
+                    $parent = $dir . $this->_delim;
+                    $folder = new Zend_Mail_Storage_Folder($local, substr($dir, 1), true);
                     $parentFolder->$local = $folder;
                     array_push($folderStack, $parentFolder);
                     $parentFolder = $folder;
                     break;
-                } elseif ($stack) {
+                } else if ($stack) {
                     $parent = array_pop($stack);
                     $parentFolder = array_pop($folderStack);
                 }
             } while ($stack);
             if (!$stack) {
-                throw new Exception\RuntimeException('error while reading maildir');
+                /**
+                 * @see Zend_Mail_Storage_Exception
+                 */
+                require_once 'Zend/Mail/Storage/Exception.php';
+                throw new Zend_Mail_Storage_Exception('error while reading maildir');
             }
         }
     }
@@ -144,34 +181,35 @@ class Maildir extends Storage\Maildir implements FolderInterface
      * get root folder or given folder
      *
      * @param string $rootFolder get folder structure for given folder, else root
-     * @throws \Zend\Mail\Storage\Exception\InvalidArgumentException
-     * @return \Zend\Mail\Storage\Folder root or wanted folder
+     * @return Zend_Mail_Storage_Folder root or wanted folder
+     * @throws Zend_Mail_Storage_Exception
      */
     public function getFolders($rootFolder = null)
     {
         if (!$rootFolder || $rootFolder == 'INBOX') {
-            return $this->rootFolder;
+            return $this->_rootFolder;
         }
 
         // rootdir is same as INBOX in maildir
-        if (strpos($rootFolder, 'INBOX' . $this->delim) === 0) {
+        if (strpos($rootFolder, 'INBOX' . $this->_delim) === 0) {
             $rootFolder = substr($rootFolder, 6);
         }
-        $currentFolder = $this->rootFolder;
-        $subname = trim($rootFolder, $this->delim);
-
+        $currentFolder = $this->_rootFolder;
+        $subname = trim($rootFolder, $this->_delim);
         while ($currentFolder) {
-            ErrorHandler::start(E_NOTICE);
-            list($entry, $subname) = explode($this->delim, $subname, 2);
-            ErrorHandler::stop();
+            @list($entry, $subname) = @explode($this->_delim, $subname, 2);
             $currentFolder = $currentFolder->$entry;
             if (!$subname) {
                 break;
             }
         }
 
-        if ($currentFolder->getGlobalName() != rtrim($rootFolder, $this->delim)) {
-            throw new Exception\InvalidArgumentException("folder $rootFolder not found");
+        if ($currentFolder->getGlobalName() != rtrim($rootFolder, $this->_delim)) {
+            /**
+             * @see Zend_Mail_Storage_Exception
+             */
+            require_once 'Zend/Mail/Storage/Exception.php';
+            throw new Zend_Mail_Storage_Exception("folder $rootFolder not found");
         }
         return $currentFolder;
     }
@@ -181,37 +219,47 @@ class Maildir extends Storage\Maildir implements FolderInterface
      *
      * folder must be selectable!
      *
-     * @param \Zend\Mail\Storage\Folder|string $globalName global name of folder or instance for subfolder
-     * @throws \Zend\Mail\Storage\Exception\RuntimeException
+     * @param Zend_Mail_Storage_Folder|string $globalName global name of folder or instance for subfolder
+     * @return null
+     * @throws Zend_Mail_Storage_Exception
      */
     public function selectFolder($globalName)
     {
-        $this->currentFolder = (string) $globalName;
+        $this->_currentFolder = (string)$globalName;
 
         // getting folder from folder tree for validation
-        $folder = $this->getFolders($this->currentFolder);
+        $folder = $this->getFolders($this->_currentFolder);
 
         try {
-            $this->_openMaildir($this->rootdir . '.' . $folder->getGlobalName());
-        } catch (Exception\ExceptionInterface $e) {
+            $this->_openMaildir($this->_rootdir . '.' . $folder->getGlobalName());
+        } catch(Zend_Mail_Storage_Exception $e) {
             // check what went wrong
             if (!$folder->isSelectable()) {
-                throw new Exception\RuntimeException("{$this->currentFolder} is not selectable", 0, $e);
+                /**
+                 * @see Zend_Mail_Storage_Exception
+                 */
+                require_once 'Zend/Mail/Storage/Exception.php';
+                throw new Zend_Mail_Storage_Exception("{$this->_currentFolder} is not selectable", 0, $e);
             }
             // seems like file has vanished; rebuilding folder tree - but it's still an exception
-            $this->_buildFolderTree($this->rootdir);
-            throw new Exception\RuntimeException('seems like the maildir has vanished, I\'ve rebuild the ' .
+            $this->_buildFolderTree($this->_rootdir);
+            /**
+             * @see Zend_Mail_Storage_Exception
+             */
+            require_once 'Zend/Mail/Storage/Exception.php';
+            throw new Zend_Mail_Storage_Exception('seems like the maildir has vanished, I\'ve rebuild the ' .
                                                          'folder tree, search for an other folder and try again', 0, $e);
         }
     }
 
     /**
-     * get \Zend\Mail\Storage\Folder instance for current folder
+     * get Zend_Mail_Storage_Folder instance for current folder
      *
-     * @return \Zend\Mail\Storage\Folder instance of current folder
+     * @return Zend_Mail_Storage_Folder instance of current folder
+     * @throws Zend_Mail_Storage_Exception
      */
     public function getCurrentFolder()
     {
-        return $this->currentFolder;
+        return $this->_currentFolder;
     }
 }

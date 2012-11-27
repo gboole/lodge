@@ -1,38 +1,57 @@
 <?php
 /**
- * Zend Framework (http://framework.zend.com/)
+ * Zend Framework
  *
- * @link      http://github.com/zendframework/zf2 for the canonical source repository
- * @copyright Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
- * @license   http://framework.zend.com/license/new-bsd New BSD License
- * @package   Zend_View
+ * LICENSE
+ *
+ * This source file is subject to the new BSD license that is bundled
+ * with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://framework.zend.com/license/new-bsd
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@zend.com so we can send you a copy immediately.
+ *
+ * @category   Zend
+ * @package    Zend_View
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id: PaginationControl.php 24593 2012-01-05 20:35:02Z matthew $
  */
-
-namespace Zend\View\Helper;
-
-use Zend\Paginator;
-use Zend\View;
-use Zend\View\Exception;
 
 /**
  * @category   Zend
  * @package    Zend_View
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
-class PaginationControl extends AbstractHelper
+class Zend_View_Helper_PaginationControl
 {
+    /**
+     * View instance
+     *
+     * @var Zend_View_Instance
+     */
+    public $view = null;
+
     /**
      * Default view partial
      *
      * @var string|array
      */
-    protected static $defaultViewPartial = null;
+    protected static $_defaultViewPartial = null;
 
     /**
-     * Default Scrolling Style
+     * Sets the view instance.
      *
-     * @var string
+     * @param  Zend_View_Interface $view View instance
+     * @return Zend_View_Helper_PaginationControl
      */
-    protected static $defaultScrollingStyle = 'sliding';
+    public function setView(Zend_View_Interface $view)
+    {
+        $this->view = $view;
+        return $this;
+    }
 
     /**
      * Sets the default view partial.
@@ -41,7 +60,7 @@ class PaginationControl extends AbstractHelper
      */
     public static function setDefaultViewPartial($partial)
     {
-        self::$defaultViewPartial = $partial;
+        self::$_defaultViewPartial = $partial;
     }
 
     /**
@@ -51,27 +70,7 @@ class PaginationControl extends AbstractHelper
      */
     public static function getDefaultViewPartial()
     {
-        return self::$defaultViewPartial;
-    }
-
-     /**
-     * Gets the default scrolling style
-     *
-     * @return string
-     */
-    public static function getDefaultScrollingStyle()
-    {
-        return self::$defaultScrollingStyle;
-    }
-
-    /**
-     * Sets the default Scrolling Style
-     *
-     * @param string $style string 'all' | 'elastic' | 'sliding' | 'jumping'
-     */
-    public static function setDefaultScrollingStyle($style)
-    {
-        self::$defaultScrollingStyle = $style;
+        return self::$_defaultViewPartial;
     }
 
     /**
@@ -79,34 +78,42 @@ class PaginationControl extends AbstractHelper
      * if so, uses that.  Also, if no scrolling style or partial are specified,
      * the defaults will be used (if set).
      *
-     * @param  \Zend\Paginator\Paginator (Optional) $paginator
+     * @param  Zend_Paginator (Optional) $paginator
      * @param  string $scrollingStyle (Optional) Scrolling style
      * @param  string $partial (Optional) View partial
      * @param  array|string $params (Optional) params to pass to the partial
      * @return string
-     * @throws Exception\RuntimeException if no paginator or no view partial provided
-     * @throws Exception\InvalidArgumentException if partial is invalid array
+     * @throws Zend_View_Exception
      */
-    public function __invoke(Paginator\Paginator $paginator = null, $scrollingStyle = null, $partial = null, $params = null)
+    public function paginationControl(Zend_Paginator $paginator = null, $scrollingStyle = null, $partial = null, $params = null)
     {
         if ($paginator === null) {
-            if (isset($this->view->paginator) and $this->view->paginator !== null and $this->view->paginator instanceof Paginator\Paginator) {
+            if (isset($this->view->paginator) and $this->view->paginator !== null and $this->view->paginator instanceof Zend_Paginator) {
                 $paginator = $this->view->paginator;
             } else {
-                throw new Exception\RuntimeException('No paginator instance provided or incorrect type');
+                /**
+                 * @see Zend_View_Exception
+                 */
+                require_once 'Zend/View/Exception.php';
+
+                $e = new Zend_View_Exception('No paginator instance provided or incorrect type');
+                $e->setView($this->view);
+                throw $e;
             }
         }
 
         if ($partial === null) {
-            if (self::$defaultViewPartial === null) {
-                throw new Exception\RuntimeException('No view partial provided and no default set');
+            if (self::$_defaultViewPartial === null) {
+                /**
+                 * @see Zend_View_Exception
+                 */
+                require_once 'Zend/View/Exception.php';
+                $e = new Zend_View_Exception('No view partial provided and no default set');
+                $e->setView($this->view);
+                throw $e;
             }
 
-            $partial = self::$defaultViewPartial;
-        }
-
-        if ($scrollingStyle === null) {
-            $scrollingStyle = self::$defaultScrollingStyle;
+            $partial = self::$_defaultViewPartial;
         }
 
         $pages = get_object_vars($paginator->getPages($scrollingStyle));
@@ -117,20 +124,22 @@ class PaginationControl extends AbstractHelper
 
         if (is_array($partial)) {
             if (count($partial) != 2) {
-                throw new Exception\InvalidArgumentException(
-                    'A view partial supplied as an array must contain two values: the filename and its module'
-                );
+                /**
+                 * @see Zend_View_Exception
+                 */
+                require_once 'Zend/View/Exception.php';
+                $e = new Zend_View_Exception('A view partial supplied as an array must contain two values: the filename and its module');
+                $e->setView($this->view);
+                throw $e;
             }
 
             if ($partial[1] !== null) {
-                $partialHelper = $this->view->plugin('partial');
-                return $partialHelper($partial[0], $pages);
+                return $this->view->partial($partial[0], $partial[1], $pages);
             }
 
             $partial = $partial[0];
         }
 
-        $partialHelper = $this->view->plugin('partial');
-        return $partialHelper($partial, $pages);
+        return $this->view->partial($partial, $pages);
     }
 }

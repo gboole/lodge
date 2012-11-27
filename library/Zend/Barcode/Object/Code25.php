@@ -1,22 +1,44 @@
 <?php
 /**
- * Zend Framework (http://framework.zend.com/)
+ * Zend Framework
  *
- * @link      http://github.com/zendframework/zf2 for the canonical source repository
- * @copyright Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
- * @license   http://framework.zend.com/license/new-bsd New BSD License
- * @package   Zend_Barcode
+ * LICENSE
+ *
+ * This source file is subject to the new BSD license that is bundled
+ * with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://framework.zend.com/license/new-bsd
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@zend.com so we can send you a copy immediately.
+ *
+ * @category   Zend
+ * @package    Zend_Barcode
+ * @subpackage Object
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id: Code25.php 24593 2012-01-05 20:35:02Z matthew $
  */
 
-namespace Zend\Barcode\Object;
+/**
+ * @see Zend_Barcode_Object_ObjectAbstract
+ */
+require_once 'Zend/Barcode/Object/ObjectAbstract.php';
+
+/**
+ * @see Zend_Validate_Barcode
+ */
+require_once 'Zend/Validate/Barcode.php';
 
 /**
  * Class for generate Interleaved 2 of 5 barcode
  *
  * @category   Zend
  * @package    Zend_Barcode
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
-class Code25 extends AbstractObject
+class Zend_Barcode_Object_Code25 extends Zend_Barcode_Object_ObjectAbstract
 {
     /**
      * Coding map
@@ -24,7 +46,7 @@ class Code25 extends AbstractObject
      * - 1 = wide bar
      * @var array
      */
-    protected $codingMap = array(
+    protected $_codingMap = array(
         '0' => '00110',
         '1' => '10001',
         '2' => '01001',
@@ -41,14 +63,14 @@ class Code25 extends AbstractObject
      * Width of the barcode (in pixels)
      * @return integer
      */
-    protected function calculateBarcodeWidth()
+    protected function _calculateBarcodeWidth()
     {
         $quietZone       = $this->getQuietZone();
-        $startCharacter  = (2 * $this->barThickWidth + 4 * $this->barThinWidth) * $this->factor;
-        $characterLength = (3 * $this->barThinWidth + 2 * $this->barThickWidth + 5 * $this->barThinWidth)
-                         * $this->factor;
+        $startCharacter  = (2 * $this->_barThickWidth + 4 * $this->_barThinWidth) * $this->_factor;
+        $characterLength = (3 * $this->_barThinWidth + 2 * $this->_barThickWidth + 5 * $this->_barThinWidth)
+                         * $this->_factor;
         $encodedData     = strlen($this->getText()) * $characterLength;
-        $stopCharacter   = (2 * $this->barThickWidth + 4 * $this->barThinWidth) * $this->factor;
+        $stopCharacter   = (2 * $this->_barThickWidth + 4 * $this->_barThinWidth) * $this->_factor;
         return $quietZone + $startCharacter + $encodedData + $stopCharacter + $quietZone;
     }
 
@@ -56,44 +78,44 @@ class Code25 extends AbstractObject
      * Partial check of interleaved 2 of 5 barcode
      * @return void
      */
-    protected function checkSpecificParams()
+    protected function _checkParams()
     {
-        $this->checkRatio();
+        $this->_checkRatio();
     }
 
     /**
      * Prepare array to draw barcode
      * @return array
      */
-    protected function prepareBarcode()
+    protected function _prepareBarcode()
     {
         $barcodeTable = array();
 
         // Start character (30301)
-        $barcodeTable[] = array(1 , $this->barThickWidth , 0 , 1);
-        $barcodeTable[] = array(0 , $this->barThinWidth , 0 , 1);
-        $barcodeTable[] = array(1 , $this->barThickWidth , 0 , 1);
-        $barcodeTable[] = array(0 , $this->barThinWidth , 0 , 1);
-        $barcodeTable[] = array(1 , $this->barThinWidth , 0 , 1);
-        $barcodeTable[] = array(0 , $this->barThinWidth);
+        $barcodeTable[] = array(1 , $this->_barThickWidth , 0 , 1);
+        $barcodeTable[] = array(0 , $this->_barThinWidth , 0 , 1);
+        $barcodeTable[] = array(1 , $this->_barThickWidth , 0 , 1);
+        $barcodeTable[] = array(0 , $this->_barThinWidth , 0 , 1);
+        $barcodeTable[] = array(1 , $this->_barThinWidth , 0 , 1);
+        $barcodeTable[] = array(0 , $this->_barThinWidth);
 
         $text = str_split($this->getText());
         foreach ($text as $char) {
-            $barcodeChar = str_split($this->codingMap[$char]);
+            $barcodeChar = str_split($this->_codingMap[$char]);
             foreach ($barcodeChar as $c) {
                 /* visible, width, top, length */
-                $width = $c ? $this->barThickWidth : $this->barThinWidth;
+                $width = $c ? $this->_barThickWidth : $this->_barThinWidth;
                 $barcodeTable[] = array(1 , $width , 0 , 1);
-                $barcodeTable[] = array(0 , $this->barThinWidth);
+                $barcodeTable[] = array(0 , $this->_barThinWidth);
             }
         }
 
         // Stop character (30103)
-        $barcodeTable[] = array(1 , $this->barThickWidth , 0 , 1);
-        $barcodeTable[] = array(0 , $this->barThinWidth , 0 , 1);
-        $barcodeTable[] = array(1 , $this->barThinWidth , 0 , 1);
-        $barcodeTable[] = array(0 , $this->barThinWidth , 0 , 1);
-        $barcodeTable[] = array(1 , $this->barThickWidth , 0 , 1);
+        $barcodeTable[] = array(1 , $this->_barThickWidth , 0 , 1);
+        $barcodeTable[] = array(0 , $this->_barThinWidth , 0 , 1);
+        $barcodeTable[] = array(1 , $this->_barThinWidth , 0 , 1);
+        $barcodeTable[] = array(0 , $this->_barThinWidth , 0 , 1);
+        $barcodeTable[] = array(1 , $this->_barThickWidth , 0 , 1);
         return $barcodeTable;
     }
 
@@ -105,7 +127,7 @@ class Code25 extends AbstractObject
      */
     public function getChecksum($text)
     {
-        $this->checkText($text);
+        $this->_checkText($text);
         $factor   = 3;
         $checksum = 0;
 

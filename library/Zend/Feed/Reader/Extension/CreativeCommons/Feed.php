@@ -1,28 +1,41 @@
 <?php
 /**
- * Zend Framework (http://framework.zend.com/)
+ * Zend Framework
  *
- * @link      http://github.com/zendframework/zf2 for the canonical source repository
- * @copyright Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
- * @license   http://framework.zend.com/license/new-bsd New BSD License
- * @package   Zend_Feed
+ * LICENSE
+ *
+ * This source file is subject to the new BSD license that is bundled
+ * with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://framework.zend.com/license/new-bsd
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@zend.com so we can send you a copy immediately.
+ *
+ * @category   Zend
+ * @package    Zend_Feed_Reader
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id: Feed.php 24593 2012-01-05 20:35:02Z matthew $
  */
 
-namespace Zend\Feed\Reader\Extension\CreativeCommons;
-
-use Zend\Feed\Reader;
-use Zend\Feed\Reader\Extension;
+/**
+ * @see Zend_Feed_Reader_Extension_FeedAbstract
+ */
+require_once 'Zend/Feed/Reader/Extension/FeedAbstract.php';
 
 /**
-* @category Zend
-* @package Reader\Reader
-*/
-class Feed extends Extension\AbstractFeed
+ * @category   Zend
+ * @package    Zend_Feed_Reader
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ */
+class Zend_Feed_Reader_Extension_CreativeCommons_Feed
+    extends Zend_Feed_Reader_Extension_FeedAbstract
 {
     /**
      * Get the entry license
      *
-     * @param int $index
      * @return string|null
      */
     public function getLicense($index = 0)
@@ -44,12 +57,12 @@ class Feed extends Extension\AbstractFeed
     public function getLicenses()
     {
         $name = 'licenses';
-        if (array_key_exists($name, $this->data)) {
-            return $this->data[$name];
+        if (array_key_exists($name, $this->_data)) {
+            return $this->_data[$name];
         }
 
         $licenses = array();
-        $list = $this->xpath->evaluate('channel/cc:license');
+        $list = $this->_xpath->evaluate('channel/cc:license');
 
         if ($list->length) {
             foreach ($list as $license) {
@@ -59,9 +72,9 @@ class Feed extends Extension\AbstractFeed
             $licenses = array_unique($licenses);
         }
 
-        $this->data[$name] = $licenses;
+        $this->_data[$name] = $licenses;
 
-        return $this->data[$name];
+        return $this->_data[$name];
     }
 
     /**
@@ -69,8 +82,8 @@ class Feed extends Extension\AbstractFeed
      *
      * @return void
      */
-    protected function registerNamespaces()
+    protected function _registerNamespaces()
     {
-        $this->xpath->registerNamespace('cc', 'http://backend.userland.com/creativeCommonsRssModule');
+        $this->_xpath->registerNamespace('cc', 'http://backend.userland.com/creativeCommonsRssModule');
     }
 }

@@ -1,14 +1,25 @@
 <?php
 /**
- * Zend Framework (http://framework.zend.com/)
+ * Zend Framework
  *
- * @link      http://github.com/zendframework/zf2 for the canonical source repository
- * @copyright Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
- * @license   http://framework.zend.com/license/new-bsd New BSD License
- * @package   Zend_Soap
+ * LICENSE
+ *
+ * This source file is subject to the new BSD license that is bundled
+ * with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://framework.zend.com/license/new-bsd
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@zend.com so we can send you a copy immediately.
+ *
+ * @category   Zend
+ * @package    Zend_Soap
+ * @subpackage Client
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id: Common.php 24593 2012-01-05 20:35:02Z matthew $
  */
 
-namespace Zend\Soap\Client;
 
 if (extension_loaded('soap')) {
 
@@ -17,25 +28,25 @@ if (extension_loaded('soap')) {
  * @package    Zend_Soap
  * @subpackage Client
  */
-class Common extends \SoapClient
+class Zend_Soap_Client_Common extends SoapClient
 {
     /**
      * doRequest() pre-processing method
      *
-     * @var callable
+     * @var callback
      */
-    protected $doRequestCallback;
+    protected $_doRequestCallback;
 
     /**
      * Common Soap Client constructor
      *
-     * @param callable $doRequestCallback
+     * @param callback $doRequestMethod
      * @param string $wsdl
      * @param array $options
      */
-    public function __construct($doRequestCallback, $wsdl, $options)
+    function __construct($doRequestCallback, $wsdl, $options)
     {
-        $this->doRequestCallback = $doRequestCallback;
+        $this->_doRequestCallback = $doRequestCallback;
 
         parent::__construct($wsdl, $options);
     }
@@ -51,12 +62,12 @@ class Common extends \SoapClient
      * @param int    $one_way
      * @return mixed
      */
-    public function __doRequest($request, $location, $action, $version, $one_way = null)
+    function __doRequest($request, $location, $action, $version, $one_way = null)
     {
         if ($one_way === null) {
-            return call_user_func($this->doRequestCallback, $this, $request, $location, $action, $version);
+            return call_user_func($this->_doRequestCallback, $this, $request, $location, $action, $version);
         } else {
-            return call_user_func($this->doRequestCallback, $this, $request, $location, $action, $version, $one_way);
+            return call_user_func($this->_doRequestCallback, $this, $request, $location, $action, $version, $one_way);
         }
     }
 

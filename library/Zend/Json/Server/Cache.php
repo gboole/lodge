@@ -1,17 +1,27 @@
 <?php
 /**
- * Zend Framework (http://framework.zend.com/)
+ * Zend Framework
  *
- * @link      http://github.com/zendframework/zf2 for the canonical source repository
- * @copyright Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
- * @license   http://framework.zend.com/license/new-bsd New BSD License
- * @package   Zend_Json
+ * LICENSE
+ *
+ * This source file is subject to the new BSD license that is bundled
+ * with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://framework.zend.com/license/new-bsd
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@zend.com so we can send you a copy immediately.
+ *
+ * @category   Zend
+ * @package    Zend_Json
+ * @subpackage Server
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id: Cache.php 24593 2012-01-05 20:35:02Z matthew $
  */
 
-namespace Zend\Json\Server;
-
-use Zend\Server\Cache as ServerCache;
-use Zend\Stdlib\ErrorHandler;
+/** Zend_Server_Cache */
+require_once 'Zend/Server/Cache.php';
 
 /**
  * Zend_Json_Server_Cache: cache Zend_Json_Server server definition and SMD
@@ -19,8 +29,10 @@ use Zend\Stdlib\ErrorHandler;
  * @category   Zend
  * @package    Zend_Json
  * @subpackage Server
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
-class Cache extends ServerCache
+class Zend_Json_Server_Cache extends Zend_Server_Cache
 {
     /**
      * Cache a service map description (SMD) to a file
@@ -28,10 +40,10 @@ class Cache extends ServerCache
      * Returns true on success, false on failure
      *
      * @param  string $filename
-     * @param  \Zend\Json\Server\Server $server
+     * @param  Zend_Json_Server $server
      * @return boolean
      */
-    public static function saveSmd($filename, Server $server)
+    public static function saveSmd($filename, Zend_Json_Server $server)
     {
         if (!is_string($filename)
             || (!file_exists($filename) && !is_writable(dirname($filename))))
@@ -39,11 +51,7 @@ class Cache extends ServerCache
             return false;
         }
 
-        ErrorHandler::start();
-        $test = file_put_contents($filename, $server->getServiceMap()->toJson());
-        ErrorHandler::stop();
-
-        if (0 === $test) {
+        if (0 === @file_put_contents($filename, $server->getServiceMap()->toJson())) {
             return false;
         }
 
@@ -68,11 +76,8 @@ class Cache extends ServerCache
             return false;
         }
 
-        ErrorHandler::start();
-        $smd = file_get_contents($filename);
-        ErrorHandler::stop();
 
-        if (false === $smd) {
+        if (false === ($smd = @file_get_contents($filename))) {
             return false;
         }
 

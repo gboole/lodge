@@ -1,14 +1,24 @@
 <?php
 /**
- * Zend Framework (http://framework.zend.com/)
+ * Zend Framework
  *
- * @link      http://github.com/zendframework/zf2 for the canonical source repository
- * @copyright Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
- * @license   http://framework.zend.com/license/new-bsd New BSD License
- * @package   Zend_View
+ * LICENSE
+ *
+ * This source file is subject to the new BSD license that is bundled
+ * with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://framework.zend.com/license/new-bsd
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@zend.com so we can send you a copy immediately.
+ *
+ * @category   Zend
+ * @package    Zend_View
+ * @subpackage Helper
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id: ServerUrl.php 25024 2012-07-30 15:08:15Z rob $
  */
-
-namespace Zend\View\Helper;
 
 /**
  * Helper for returning the current server URL (optionally with request URI)
@@ -16,26 +26,29 @@ namespace Zend\View\Helper;
  * @category   Zend
  * @package    Zend_View
  * @subpackage Helper
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
-class ServerUrl extends AbstractHelper
+class Zend_View_Helper_ServerUrl
 {
     /**
      * Scheme
      *
      * @var string
      */
-    protected $scheme;
+    protected $_scheme;
 
     /**
      * Host (including port)
      *
      * @var string
      */
-    protected $host;
+    protected $_host;
 
     /**
      * Constructor
      *
+     * @return void
      */
     public function __construct()
     {
@@ -50,16 +63,9 @@ class ServerUrl extends AbstractHelper
         }
         $this->setScheme($scheme);
 
-        if (isset($_SERVER['HTTP_X_FORWARDED_HOST']) && !empty($_SERVER['HTTP_X_FORWARDED_HOST'])) {
-            $host = $_SERVER['HTTP_X_FORWARDED_HOST'];
-            if (strpos($host, ',') !== false) {
-                $hosts = explode(',', $host);
-                $host = trim(array_pop($hosts));
-            }
-            $this->setHost($host);
-        } elseif (isset($_SERVER['HTTP_HOST']) && !empty($_SERVER['HTTP_HOST'])) {
+        if (isset($_SERVER['HTTP_HOST']) && !empty($_SERVER['HTTP_HOST'])) {
             $this->setHost($_SERVER['HTTP_HOST']);
-        } elseif (isset($_SERVER['SERVER_NAME'], $_SERVER['SERVER_PORT'])) {
+        } else if (isset($_SERVER['SERVER_NAME'], $_SERVER['SERVER_PORT'])) {
             $name = $_SERVER['SERVER_NAME'];
             $port = $_SERVER['SERVER_PORT'];
 
@@ -83,11 +89,11 @@ class ServerUrl extends AbstractHelper
      *                                     is to not append any path.
      * @return string                      server url
      */
-    public function __invoke($requestUri = null)
+    public function serverUrl($requestUri = null)
     {
         if ($requestUri === true) {
             $path = $_SERVER['REQUEST_URI'];
-        } elseif (is_string($requestUri)) {
+        } else if (is_string($requestUri)) {
             $path = $requestUri;
         } else {
             $path = '';
@@ -103,18 +109,18 @@ class ServerUrl extends AbstractHelper
      */
     public function getHost()
     {
-        return $this->host;
+        return $this->_host;
     }
 
     /**
      * Sets host
      *
      * @param  string $host                new host
-     * @return \Zend\View\Helper\ServerUrl  fluent interface, returns self
+     * @return Zend_View_Helper_ServerUrl  fluent interface, returns self
      */
     public function setHost($host)
     {
-        $this->host = $host;
+        $this->_host = $host;
         return $this;
     }
 
@@ -125,18 +131,18 @@ class ServerUrl extends AbstractHelper
      */
     public function getScheme()
     {
-        return $this->scheme;
+        return $this->_scheme;
     }
 
     /**
      * Sets scheme (typically http or https)
      *
      * @param  string $scheme              new scheme (typically http or https)
-     * @return \Zend\View\Helper\ServerUrl  fluent interface, returns self
+     * @return Zend_View_Helper_ServerUrl  fluent interface, returns self
      */
     public function setScheme($scheme)
     {
-        $this->scheme = $scheme;
+        $this->_scheme = $scheme;
         return $this;
     }
 }

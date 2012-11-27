@@ -1,31 +1,47 @@
 <?php
 /**
- * Zend Framework (http://framework.zend.com/)
+ * Zend Framework
  *
- * @link      http://github.com/zendframework/zf2 for the canonical source repository
- * @copyright Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
- * @license   http://framework.zend.com/license/new-bsd New BSD License
- * @package   Zend_Filter
+ * LICENSE
+ *
+ * This source file is subject to the new BSD license that is bundled
+ * with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://framework.zend.com/license/new-bsd
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@zend.com so we can send you a copy immediately.
+ *
+ * @category   Zend
+ * @package    Zend_Filter
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id: SeparatorToSeparator.php 24593 2012-01-05 20:35:02Z matthew $
  */
 
-namespace Zend\Filter\Word;
-
-use Zend\Filter\Exception;
+/**
+ * @see Zend_Filter_PregReplace
+ */
+require_once 'Zend/Filter/PregReplace.php';
 
 /**
  * @category   Zend
  * @package    Zend_Filter
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
-class SeparatorToSeparator extends \Zend\Filter\PregReplace
+class Zend_Filter_Word_SeparatorToSeparator extends Zend_Filter_PregReplace
 {
-    protected $searchSeparator = null;
-    protected $replacementSeparator = null;
+
+    protected $_searchSeparator = null;
+    protected $_replacementSeparator = null;
 
     /**
      * Constructor
      *
-     * @param  string  $searchSeparator      Separator to search for
-     * @param  string  $replacementSeparator Separator to replace with
+     * @param  string  $searchSeparator      Seperator to search for
+     * @param  string  $replacementSeperator Seperator to replace with
+     * @return void
      */
     public function __construct($searchSeparator = ' ', $replacementSeparator = '-')
     {
@@ -37,50 +53,50 @@ class SeparatorToSeparator extends \Zend\Filter\PregReplace
      * Sets a new seperator to search for
      *
      * @param  string  $separator  Seperator to search for
-     * @return SeparatorToSeparator
+     * @return $this
      */
     public function setSearchSeparator($separator)
     {
-        $this->searchSeparator = $separator;
+        $this->_searchSeparator = $separator;
         return $this;
     }
 
     /**
-     * Returns the actual set separator to search for
+     * Returns the actual set seperator to search for
      *
      * @return  string
      */
     public function getSearchSeparator()
     {
-        return $this->searchSeparator;
+        return $this->_searchSeparator;
     }
 
     /**
-     * Sets a new separator which replaces the searched one
+     * Sets a new seperator which replaces the searched one
      *
-     * @param  string  $separator  Separator which replaces the searched one
-     * @return SeparatorToSeparator
+     * @param  string  $separator  Seperator which replaces the searched one
+     * @return $this
      */
     public function setReplacementSeparator($separator)
     {
-        $this->replacementSeparator = $separator;
+        $this->_replacementSeparator = $separator;
         return $this;
     }
 
     /**
-     * Returns the actual set separator which replaces the searched one
+     * Returns the actual set seperator which replaces the searched one
      *
      * @return  string
      */
     public function getReplacementSeparator()
     {
-        return $this->replacementSeparator;
+        return $this->_replacementSeparator;
     }
 
     /**
-     * Defined by Zend\Filter\Filter
+     * Defined by Zend_Filter_Interface
      *
-     * Returns the string $value, replacing the searched separators with the defined ones
+     * Returns the string $value, replacing the searched seperators with the defined ones
      *
      * @param  string $value
      * @return string
@@ -97,16 +113,16 @@ class SeparatorToSeparator extends \Zend\Filter\PregReplace
      *
      * @param  string $value
      * @return string
-     * @throws Exception\RuntimeException
      */
     protected function _separatorToSeparatorFilter($value)
     {
-        if ($this->searchSeparator == null) {
-            throw new Exception\RuntimeException('You must provide a search separator for this filter to work.');
+        if ($this->_searchSeparator == null) {
+            require_once 'Zend/Filter/Exception.php';
+            throw new Zend_Filter_Exception('You must provide a search separator for this filter to work.');
         }
 
-        $this->setPattern('#' . preg_quote($this->searchSeparator, '#') . '#');
-        $this->setReplacement($this->replacementSeparator);
+        $this->setMatchPattern('#' . preg_quote($this->_searchSeparator, '#') . '#');
+        $this->setReplacement($this->_replacementSeparator);
         return parent::filter($value);
     }
 

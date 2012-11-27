@@ -1,17 +1,25 @@
 <?php
 /**
- * Zend Framework (http://framework.zend.com/)
+ * Zend Framework
  *
- * @link      http://github.com/zendframework/zf2 for the canonical source repository
- * @copyright Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
- * @license   http://framework.zend.com/license/new-bsd New BSD License
- * @package   Zend_Loader
+ * LICENSE
+ *
+ * This source file is subject to the new BSD license that is bundled
+ * with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://framework.zend.com/license/new-bsd
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@zend.com so we can send you a copy immediately.
+ *
+ * @category   Zend
+ * @package    Zend_Loader
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 
-namespace Zend\Loader;
-
 // Grab SplAutoloader interface
-require_once __DIR__ . '/SplAutoloader.php';
+require_once dirname(__FILE__) . '/SplAutoloader.php';
 
 /**
  * PSR-0 compliant autoloader
@@ -21,8 +29,10 @@ require_once __DIR__ . '/SplAutoloader.php';
  * class is not found, a PHP warning will be raised by include().
  *
  * @package    Zend_Loader
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    New BSD {@link http://framework.zend.com/license/new-bsd}
  */
-class StandardAutoloader implements SplAutoloader
+class Zend_Loader_StandardAutoloader implements Zend_Loader_SplAutoloader
 {
     const NS_SEPARATOR     = '\\';
     const PREFIX_SEPARATOR = '_';
@@ -47,9 +57,15 @@ class StandardAutoloader implements SplAutoloader
     protected $fallbackAutoloaderFlag = false;
 
     /**
+     * @var bool
+     */
+    protected $error;
+
+    /**
      * Constructor
      *
-     * @param  null|array|\Traversable $options
+     * @param  null|array|Traversable $options
+     * @return void
      */
     public function __construct($options = null)
     {
@@ -76,31 +92,30 @@ class StandardAutoloader implements SplAutoloader
      * )
      * </code>
      *
-     * @param  array|\Traversable $options
-     * @throws Exception\InvalidArgumentException
-     * @return StandardAutoloader
+     * @param  array|Traversable $options
+     * @return Zend_Loader_StandardAutoloader
      */
     public function setOptions($options)
     {
-        if (!is_array($options) && !($options instanceof \Traversable)) {
-            require_once __DIR__ . '/Exception/InvalidArgumentException.php';
-            throw new Exception\InvalidArgumentException('Options must be either an array or Traversable');
+        if (!is_array($options) && !($options instanceof Traversable)) {
+            require_once dirname(__FILE__) . '/Exception/InvalidArgumentException.php';
+            throw new Zend_Loader_Exception_InvalidArgumentException('Options must be either an array or Traversable');
         }
 
         foreach ($options as $type => $pairs) {
             switch ($type) {
                 case self::AUTOREGISTER_ZF:
                     if ($pairs) {
-                        $this->registerNamespace('Zend', dirname(__DIR__));
+                        $this->registerPrefix('Zend', dirname(dirname(__FILE__)));
                     }
                     break;
                 case self::LOAD_NS:
-                    if (is_array($pairs) || $pairs instanceof \Traversable) {
+                    if (is_array($pairs) || $pairs instanceof Traversable) {
                         $this->registerNamespaces($pairs);
                     }
                     break;
                 case self::LOAD_PREFIX:
-                    if (is_array($pairs) || $pairs instanceof \Traversable) {
+                    if (is_array($pairs) || $pairs instanceof Traversable) {
                         $this->registerPrefixes($pairs);
                     }
                     break;
@@ -118,7 +133,7 @@ class StandardAutoloader implements SplAutoloader
      * Set flag indicating fallback autoloader status
      *
      * @param  bool $flag
-     * @return StandardAutoloader
+     * @return Zend_Loader_StandardAutoloader
      */
     public function setFallbackAutoloader($flag)
     {
@@ -141,11 +156,11 @@ class StandardAutoloader implements SplAutoloader
      *
      * @param  string $namespace
      * @param  string $directory
-     * @return StandardAutoloader
+     * @return Zend_Loader_StandardAutoloader
      */
     public function registerNamespace($namespace, $directory)
     {
-        $namespace = rtrim($namespace, self::NS_SEPARATOR) . self::NS_SEPARATOR;
+        $namespace = rtrim($namespace, self::NS_SEPARATOR). self::NS_SEPARATOR;
         $this->namespaces[$namespace] = $this->normalizeDirectory($directory);
         return $this;
     }
@@ -154,14 +169,13 @@ class StandardAutoloader implements SplAutoloader
      * Register many namespace/directory pairs at once
      *
      * @param  array $namespaces
-     * @throws Exception\InvalidArgumentException
-     * @return StandardAutoloader
+     * @return Zend_Loader_StandardAutoloader
      */
     public function registerNamespaces($namespaces)
     {
-        if (!is_array($namespaces) && !$namespaces instanceof \Traversable) {
-            require_once __DIR__ . '/Exception/InvalidArgumentException.php';
-            throw new Exception\InvalidArgumentException('Namespace pairs must be either an array or Traversable');
+        if (!is_array($namespaces) && !$namespaces instanceof Traversable) {
+            require_once dirname(__FILE__) . '/Exception/InvalidArgumentException.php';
+            throw new Zend_Loader_Exception_InvalidArgumentException('Namespace pairs must be either an array or Traversable');
         }
 
         foreach ($namespaces as $namespace => $directory) {
@@ -175,7 +189,7 @@ class StandardAutoloader implements SplAutoloader
      *
      * @param  string $prefix
      * @param  string $directory
-     * @return StandardAutoloader
+     * @return Zend_Loader_StandardAutoloader
      */
     public function registerPrefix($prefix, $directory)
     {
@@ -188,14 +202,13 @@ class StandardAutoloader implements SplAutoloader
      * Register many namespace/directory pairs at once
      *
      * @param  array $prefixes
-     * @throws Exception\InvalidArgumentException
-     * @return StandardAutoloader
+     * @return Zend_Loader_StandardAutoloader
      */
     public function registerPrefixes($prefixes)
     {
-        if (!is_array($prefixes) && !$prefixes instanceof \Traversable) {
-            require_once __DIR__ . '/Exception/InvalidArgumentException.php';
-            throw new Exception\InvalidArgumentException('Prefix pairs must be either an array or Traversable');
+        if (!is_array($prefixes) && !$prefixes instanceof Traversable) {
+            require_once dirname(__FILE__) . '/Exception/InvalidArgumentException.php';
+            throw new Zend_Loader_Exception_InvalidArgumentException('Prefix pairs must be either an array or Traversable');
         }
 
         foreach ($prefixes as $prefix => $directory) {
@@ -246,6 +259,21 @@ class StandardAutoloader implements SplAutoloader
     }
 
     /**
+     * Error handler
+     *
+     * Used by {@link loadClass} during fallback autoloading in PHP versions
+     * prior to 5.3.0.
+     * 
+     * @param mixed $errno 
+     * @param mixed $errstr 
+     * @return void
+     */
+    public function handleError($errno, $errstr)
+    {
+        $this->error = true;
+    }
+
+    /**
      * Transform the class name to a filename
      *
      * @param  string $class
@@ -273,25 +301,34 @@ class StandardAutoloader implements SplAutoloader
      *
      * @param  string $class
      * @param  string $type
-     * @return bool|string
-     * @throws Exception\InvalidArgumentException
+     * @return void
      */
     protected function loadClass($class, $type)
     {
         if (!in_array($type, array(self::LOAD_NS, self::LOAD_PREFIX, self::ACT_AS_FALLBACK))) {
-            require_once __DIR__ . '/Exception/InvalidArgumentException.php';
-            throw new Exception\InvalidArgumentException();
+            require_once dirname(__FILE__) . '/Exception/InvalidArgumentException.php';
+            throw new Zend_Loader_Exception_InvalidArgumentException();
         }
 
         // Fallback autoloading
         if ($type === self::ACT_AS_FALLBACK) {
             // create filename
-            $filename     = $this->transformClassNameToFilename($class, '');
-            $resolvedName = stream_resolve_include_path($filename);
-            if ($resolvedName !== false) {
-                return include $resolvedName;
+            $filename = $this->transformClassNameToFilename($class, '');
+            if (version_compare(PHP_VERSION, '5.3.2', '>=')) {
+                $resolvedName = stream_resolve_include_path($filename);
+                if ($resolvedName !== false) {
+                    return include $resolvedName;
+                }
+                return false;
             }
-            return false;
+            $this->error = false;
+            set_error_handler(array($this, 'handleError'), E_WARNING);
+            include $filename;
+            restore_error_handler();
+            if ($this->error) {
+                return false;
+            }
+            return class_exists($class, false);
         }
 
         // Namespace and/or prefix autoloading

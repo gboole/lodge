@@ -1,22 +1,33 @@
 <?php
 /**
- * Zend Framework (http://framework.zend.com/)
+ * Zend Framework
  *
- * @link      http://github.com/zendframework/zf2 for the canonical source repository
- * @copyright Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
- * @license   http://framework.zend.com/license/new-bsd New BSD License
- * @package   Zend_Text
- */
-
-namespace Zend\Text;
-
-/**
- * Contains multibyte safe string methods
+ * LICENSE
+ *
+ * This source file is subject to the new BSD license that is bundled
+ * with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://framework.zend.com/license/new-bsd
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@zend.com so we can send you a copy immediately.
  *
  * @category  Zend
  * @package   Zend_Text
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license   http://framework.zend.com/license/new-bsd     New BSD License
+ * @version   $Id: MultiByte.php 24762 2012-05-06 00:06:46Z adamlundrigan $
  */
-class MultiByte
+
+/**
+ * Zend_Text_MultiByte contains multibyte safe string methods
+ *
+ * @category  Zend
+ * @package   Zend_Text
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license   http://framework.zend.com/license/new-bsd     New BSD License
+ */
+class Zend_Text_MultiByte
 {
     /**
      * Word wrap
@@ -26,71 +37,57 @@ class MultiByte
      * @param  string  $break
      * @param  boolean $cut
      * @param  string  $charset
-     * @throws Exception\InvalidArgumentException
      * @return string
      */
     public static function wordWrap($string, $width = 75, $break = "\n", $cut = false, $charset = 'utf-8')
     {
         $stringWidth = iconv_strlen($string, $charset);
         $breakWidth  = iconv_strlen($break, $charset);
-
+        
         if (strlen($string) === 0) {
             return '';
+        } elseif ($breakWidth === null) {
+            throw new Zend_Text_Exception('Break string cannot be empty');
+        } elseif ($width === 0 && $cut) {
+            throw new Zend_Text_Exception('Can\'t force cut when width is zero');
         }
-
-        if ($breakWidth === null) {
-            throw new Exception\InvalidArgumentException('Break string cannot be empty');
-        }
-
-        if ($width === 0 && $cut) {
-            throw new Exception\InvalidArgumentException('Cannot force cut when width is zero');
-        }
-
+        
         $result    = '';
         $lastStart = $lastSpace = 0;
-
+        
         for ($current = 0; $current < $stringWidth; $current++) {
             $char = iconv_substr($string, $current, 1, $charset);
-
-            $possibleBreak = $char;
-            if ($breakWidth !== 1) {
+            
+            if ($breakWidth === 1) {
+                $possibleBreak = $char;
+            } else {
                 $possibleBreak = iconv_substr($string, $current, $breakWidth, $charset);
             }
-
+            
             if ($possibleBreak === $break) {
                 $result    .= iconv_substr($string, $lastStart, $current - $lastStart + $breakWidth, $charset);
                 $current   += $breakWidth - 1;
                 $lastStart  = $lastSpace = $current + 1;
-                continue;
-            }
-
-            if ($char === ' ') {
+            } elseif ($char === ' ') {
                 if ($current - $lastStart >= $width) {
                     $result    .= iconv_substr($string, $lastStart, $current - $lastStart, $charset) . $break;
                     $lastStart  = $current + 1;
                 }
-
+                
                 $lastSpace = $current;
-                continue;
-            }
-
-            if ($current - $lastStart >= $width && $cut && $lastStart >= $lastSpace) {
+            } elseif ($current - $lastStart >= $width && $cut && $lastStart >= $lastSpace) {
                 $result    .= iconv_substr($string, $lastStart, $current - $lastStart, $charset) . $break;
                 $lastStart  = $lastSpace = $current;
-                continue;
-            }
-
-            if ($current - $lastStart >= $width && $lastStart < $lastSpace) {
+            } elseif ($current - $lastStart >= $width && $lastStart < $lastSpace) {
                 $result    .= iconv_substr($string, $lastStart, $lastSpace - $lastStart, $charset) . $break;
                 $lastStart  = $lastSpace = $lastSpace + 1;
-                continue;
             }
         }
-
+        
         if ($lastStart !== $current) {
             $result .= iconv_substr($string, $lastStart, $current - $lastStart, $charset);
         }
-
+        
         return $result;
     }
 

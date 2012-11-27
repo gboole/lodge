@@ -1,14 +1,24 @@
 <?php
 /**
- * Zend Framework (http://framework.zend.com/)
+ * Zend Framework
  *
- * @link      http://github.com/zendframework/zf2 for the canonical source repository
- * @copyright Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
- * @license   http://framework.zend.com/license/new-bsd New BSD License
- * @package   Zend_Json
+ * LICENSE
+ *
+ * This source file is subject to the new BSD license that is bundled
+ * with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://framework.zend.com/license/new-bsd
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@zend.com so we can send you a copy immediately.
+ *
+ * @category   Zend
+ * @package    Zend_Json
+ * @subpackage Expr
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id: Expr.php 24593 2012-01-05 20:35:02Z matthew $
  */
-
-namespace Zend\Json;
 
 /**
  * Class for Zend_Json encode method.
@@ -23,36 +33,39 @@ namespace Zend\Json;
  *     'integer'  =>9,
  *     'string'   =>'test string',
  *     'function' => Zend_Json_Expr(
- *         'function() { window.alert("javascript function encoded by Zend_Json") }'
+ *         'function(){ window.alert("javascript function encoded by Zend_Json") }'
  *     ),
  * );
  *
  * Zend_Json::encode($foo, false, array('enableJsonExprFinder' => true));
  * // it will returns json encoded string:
- * // {"integer":9,"string":"test string","function":function() {window.alert("javascript function encoded by Zend_Json")}}
+ * // {"integer":9,"string":"test string","function":function(){window.alert("javascript function encoded by Zend_Json")}}
  * </code>
  *
  * @category   Zend
  * @package    Zend_Json
  * @subpackage Expr
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
-class Expr
+class Zend_Json_Expr
 {
     /**
      * Storage for javascript expression.
      *
      * @var string
      */
-    protected $expression;
+    protected $_expression;
 
     /**
      * Constructor
      *
      * @param  string $expression the expression to hold.
+     * @return void
      */
     public function __construct($expression)
     {
-        $this->expression = (string) $expression;
+        $this->_expression = (string) $expression;
     }
 
     /**
@@ -62,6 +75,6 @@ class Expr
      */
     public function __toString()
     {
-        return $this->expression;
+        return $this->_expression;
     }
 }

@@ -1,51 +1,66 @@
 <?php
 /**
- * Zend Framework (http://framework.zend.com/)
+ * Zend Framework
  *
- * @link      http://github.com/zendframework/zf2 for the canonical source repository
- * @copyright Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
- * @license   http://framework.zend.com/license/new-bsd New BSD License
- * @package   Zend_Tag
+ * LICENSE
+ *
+ * This source file is subject to the new BSD license that is bundled
+ * with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://framework.zend.com/license/new-bsd
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@zend.com so we can send you a copy immediately.
+ *
+ * @category   Zend
+ * @package    Zend_Tag
+ * @subpackage Item
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id: Item.php 24593 2012-01-05 20:35:02Z matthew $
  */
 
-namespace Zend\Tag;
-
-use Traversable;
-use Zend\Stdlib\ArrayUtils;
+/**
+ * @see Zend_Tag_Taggable
+ */
+require_once 'Zend/Tag/Taggable.php';
 
 /**
  * @category   Zend
  * @package    Zend_Tag
+ * @uses       Zend_Tag_Taggable
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
-class Item implements TaggableInterface
+class Zend_Tag_Item implements Zend_Tag_Taggable
 {
     /**
      * Title of the tag
      *
      * @var string
      */
-    protected $title = null;
+    protected $_title = null;
 
     /**
      * Weight of the tag
      *
      * @var float
      */
-    protected $weight = null;
+    protected $_weight = null;
 
     /**
      * Custom parameters
      *
      * @var string
      */
-    protected $params = array();
+    protected $_params = array();
 
     /**
      * Option keys to skip when calling setOptions()
      *
      * @var array
      */
-    protected $skipOptions = array(
+    protected $_skipOptions = array(
         'options',
         'param'
     );
@@ -53,29 +68,33 @@ class Item implements TaggableInterface
     /**
      * Create a new tag according to the options
      *
-     * @param  array|Traversable $options
-     * @throws \Zend\Tag\Exception\InvalidArgumentException When invalid options are provided
-     * @throws \Zend\Tag\Exception\InvalidArgumentException When title was not set
-     * @throws \Zend\Tag\Exception\InvalidArgumentException When weight was not set
+     * @param  array|Zend_Config $options
+     * @throws Zend_Tag_Exception When invalid options are provided
+     * @throws Zend_Tag_Exception When title was not set
+     * @throws Zend_Tag_Exception When weight was not set
+     * @return void
      */
     public function __construct($options)
     {
-        if ($options instanceof Traversable) {
-            $options = ArrayUtils::iteratorToArray($options);
+        if ($options instanceof Zend_Config) {
+            $options = $options->toArray();
         }
 
         if (!is_array($options)) {
-            throw new Exception\InvalidArgumentException('Invalid options provided to constructor');
+            require_once 'Zend/Tag/Exception.php';
+            throw new Zend_Tag_Exception('Invalid options provided to constructor');
         }
 
         $this->setOptions($options);
 
-        if ($this->title === null) {
-            throw new Exception\InvalidArgumentException('Title was not set');
+        if ($this->_title === null) {
+            require_once 'Zend/Tag/Exception.php';
+            throw new Zend_Tag_Exception('Title was not set');
         }
 
-        if ($this->weight === null) {
-            throw new Exception\InvalidArgumentException('Weight was not set');
+        if ($this->_weight === null) {
+            require_once 'Zend/Tag/Exception.php';
+            throw new Zend_Tag_Exception('Weight was not set');
         }
     }
 
@@ -83,12 +102,12 @@ class Item implements TaggableInterface
      * Set options of the tag
      *
      * @param  array $options
-     * @return \Zend\Tag\Item
+     * @return Zend_Tag_Item
      */
     public function setOptions(array $options)
     {
         foreach ($options as $key => $value) {
-            if (in_array(strtolower($key), $this->skipOptions)) {
+            if (in_array(strtolower($key), $this->_skipOptions)) {
                 continue;
             }
 
@@ -102,56 +121,58 @@ class Item implements TaggableInterface
     }
 
     /**
-     * Defined by Zend\Tag\TaggableInterface
+     * Defined by Zend_Tag_Taggable
      *
      * @return string
      */
     public function getTitle()
     {
-        return $this->title;
+        return $this->_title;
     }
 
     /**
      * Set the title
      *
      * @param  string $title
-     * @throws \Zend\Tag\Exception\InvalidArgumentException When title is no string
-     * @return \Zend\Tag\Item
+     * @throws Zend_Tag_Exception When title is no string
+     * @return Zend_Tag_Item
      */
     public function setTitle($title)
     {
         if (!is_string($title)) {
-            throw new Exception\InvalidArgumentException('Title must be a string');
+            require_once 'Zend/Tag/Exception.php';
+            throw new Zend_Tag_Exception('Title must be a string');
         }
 
-        $this->title = (string) $title;
+        $this->_title = (string) $title;
         return $this;
     }
 
     /**
-     * Defined by Zend\Tag\TaggableInterface
+     * Defined by Zend_Tag_Taggable
      *
      * @return float
      */
     public function getWeight()
     {
-        return $this->weight;
+        return $this->_weight;
     }
 
     /**
      * Set the weight
      *
      * @param  float $weight
-     * @throws \Zend\Tag\Exception\InvalidArgumentException When weight is not numeric
-     * @return \Zend\Tag\Item
+     * @throws Zend_Tag_Exception When weight is not numeric
+     * @return Zend_Tag_Item
      */
     public function setWeight($weight)
     {
         if (!is_numeric($weight)) {
-            throw new Exception\InvalidArgumentException('Weight must be numeric');
+            require_once 'Zend/Tag/Exception.php';
+            throw new Zend_Tag_Exception('Weight must be numeric');
         }
 
-        $this->weight = (float) $weight;
+        $this->_weight = (float) $weight;
         return $this;
     }
 
@@ -159,7 +180,7 @@ class Item implements TaggableInterface
      * Set multiple params at once
      *
      * @param  array $params
-     * @return \Zend\Tag\Item
+     * @return Zend_Tag_Item
      */
     public function setParams(array $params)
     {
@@ -171,28 +192,28 @@ class Item implements TaggableInterface
     }
 
     /**
-     * Defined by Zend\Tag\TaggableInterface
+     * Defined by Zend_Tag_Taggable
      *
      * @param  string $name
      * @param  mixed  $value
-     * @return \Zend\Tag\Item
+     * @return Zend_Tag_Item
      */
     public function setParam($name, $value)
     {
-        $this->params[$name] = $value;
+        $this->_params[$name] = $value;
         return $this;
     }
 
     /**
-     * Defined by Zend\Tag\TaggableInterface
+     * Defined by Zend_Tag_Taggable
      *
      * @param  string $name
      * @return mixed
      */
     public function getParam($name)
     {
-        if (isset($this->params[$name])) {
-            return $this->params[$name];
+        if (isset($this->_params[$name])) {
+            return $this->_params[$name];
         }
         return null;
     }

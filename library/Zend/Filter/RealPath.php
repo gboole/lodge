@@ -1,59 +1,50 @@
 <?php
 /**
- * Zend Framework (http://framework.zend.com/)
+ * Zend Framework
  *
- * @link      http://github.com/zendframework/zf2 for the canonical source repository
- * @copyright Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
- * @license   http://framework.zend.com/license/new-bsd New BSD License
- * @package   Zend_Filter
+ * LICENSE
+ *
+ * This source file is subject to the new BSD license that is bundled
+ * with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://framework.zend.com/license/new-bsd
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@zend.com so we can send you a copy immediately.
+ *
+ * @category   Zend
+ * @package    Zend_Filter
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id: RealPath.php 24593 2012-01-05 20:35:02Z matthew $
  */
 
-namespace Zend\Filter;
-
-use Traversable;
-use Zend\Stdlib\ErrorHandler;
+/**
+ * @see Zend_Filter_Interface
+ */
+require_once 'Zend/Filter/Interface.php';
 
 /**
  * @category   Zend
  * @package    Zend_Filter
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
-class RealPath extends AbstractFilter
+class Zend_Filter_RealPath implements Zend_Filter_Interface
 {
     /**
-     * @var array $options
+     * @var boolean $_pathExists
      */
-    protected $options = array(
-        'exists' => true
-    );
+    protected $_exists = true;
 
     /**
      * Class constructor
      *
-     * @param boolean|Traversable $existsOrOptions Options to set
+     * @param boolean|Zend_Config $options Options to set
      */
-    public function __construct($existsOrOptions = true)
+    public function __construct($options = true)
     {
-        if ($existsOrOptions !== null) {
-            if (!static::isOptions($existsOrOptions)) {
-                $this->setExists($existsOrOptions);
-            } else {
-                $this->setOptions($existsOrOptions);
-            }
-        }
-    }
-
-    /**
-     * Sets if the path has to exist
-     * TRUE when the path must exist
-     * FALSE when not existing paths can be given
-     *
-     * @param  boolean $flag Path must exist
-     * @return RealPath
-     */
-    public function setExists($flag = true)
-    {
-        $this->options['exists'] = (boolean) $flag;
-        return $this;
+        $this->setExists($options);
     }
 
     /**
@@ -63,11 +54,35 @@ class RealPath extends AbstractFilter
      */
     public function getExists()
     {
-        return $this->options['exists'];
+        return $this->_exists;
     }
 
     /**
-     * Defined by Zend\Filter\FilterInterface
+     * Sets if the path has to exist
+     * TRUE when the path must exist
+     * FALSE when not existing paths can be given
+     *
+     * @param boolean|Zend_Config $exists Path must exist
+     * @return Zend_Filter_RealPath
+     */
+    public function setExists($exists)
+    {
+        if ($exists instanceof Zend_Config) {
+            $exists = $exists->toArray();
+        }
+
+        if (is_array($exists)) {
+            if (isset($exists['exists'])) {
+                $exists = (boolean) $exists['exists'];
+            }
+        }
+
+        $this->_exists = (boolean) $exists;
+        return $this;
+    }
+
+    /**
+     * Defined by Zend_Filter_Interface
      *
      * Returns realpath($value)
      *
@@ -77,22 +92,20 @@ class RealPath extends AbstractFilter
     public function filter($value)
     {
         $path = (string) $value;
-        if ($this->options['exists']) {
+        if ($this->_exists) {
             return realpath($path);
         }
 
-        ErrorHandler::start();
-        $realpath = realpath($path);
-        ErrorHandler::stop();
+        $realpath = @realpath($path);
         if ($realpath) {
             return $realpath;
         }
 
         $drive = '';
-        if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+        if (substr(PHP_OS, 0, 3) == 'WIN') {
             $path = preg_replace('/[\\\\\/]/', DIRECTORY_SEPARATOR, $path);
             if (preg_match('/([a-zA-Z]\:)(.*)/', $path, $matches)) {
-                list(, $drive, $path) = $matches;
+                list($fullMatch, $drive, $path) = $matches;
             } else {
                 $cwd   = getcwd();
                 $drive = substr($cwd, 0, 2);

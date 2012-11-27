@@ -1,28 +1,50 @@
 <?php
 /**
- * Zend Framework (http://framework.zend.com/)
+ * Zend Framework
  *
- * @link      http://github.com/zendframework/zf2 for the canonical source repository
- * @copyright Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
- * @license   http://framework.zend.com/license/new-bsd New BSD License
- * @package   Zend_Barcode
+ * LICENSE
+ *
+ * This source file is subject to the new BSD license that is bundled
+ * with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://framework.zend.com/license/new-bsd
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@zend.com so we can send you a copy immediately.
+ *
+ * @category   Zend
+ * @package    Zend_Barcode
+ * @subpackage Object
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id: Code39.php 24593 2012-01-05 20:35:02Z matthew $
  */
 
-namespace Zend\Barcode\Object;
+/**
+ * @see Zend_Barcode_Object_ObjectAbstract
+ */
+require_once 'Zend/Barcode/Object/ObjectAbstract.php';
+
+/**
+ * @see 'Zend_Validate_Barcode'
+ */
+require_once 'Zend/Validate/Barcode.php';
 
 /**
  * Class for generate Code39 barcode
  *
  * @category   Zend
  * @package    Zend_Barcode
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
-class Code39 extends AbstractObject
+class Zend_Barcode_Object_Code39 extends Zend_Barcode_Object_ObjectAbstract
 {
     /**
      * Coding map
      * @var array
      */
-    protected $codingMap = array(
+    protected $_codingMap = array(
         '0' => '000110100',
         '1' => '100100001',
         '2' => '001100001',
@@ -73,31 +95,31 @@ class Code39 extends AbstractObject
      * Partial check of Code39 barcode
      * @return void
      */
-    protected function checkSpecificParams()
+    protected function _checkParams()
     {
-        $this->checkRatio();
+        $this->_checkRatio();
     }
 
     /**
      * Width of the barcode (in pixels)
      * @return int
      */
-    protected function calculateBarcodeWidth()
+    protected function _calculateBarcodeWidth()
     {
         $quietZone       = $this->getQuietZone();
-        $characterLength = (6 * $this->barThinWidth + 3 * $this->barThickWidth + 1) * $this->factor;
-        $encodedData     = strlen($this->getText()) * $characterLength - $this->factor;
+        $characterLength = (6 * $this->_barThinWidth + 3 * $this->_barThickWidth + 1) * $this->_factor;
+        $encodedData     = strlen($this->getText()) * $characterLength - $this->_factor;
         return $quietZone + $encodedData + $quietZone;
     }
 
     /**
      * Set text to encode
      * @param string $value
-     * @return Code39
+     * @return Zend_Barcode_Object
      */
     public function setText($value)
     {
-        $this->text = $value;
+        $this->_text = $value;
         return $this;
     }
 
@@ -128,20 +150,20 @@ class Code39 extends AbstractObject
      * Prepare array to draw barcode
      * @return array
      */
-    protected function prepareBarcode()
+    protected function _prepareBarcode()
     {
         $text         = str_split($this->getText());
         $barcodeTable = array();
         foreach ($text as $char) {
-            $barcodeChar = str_split($this->codingMap[$char]);
+            $barcodeChar = str_split($this->_codingMap[$char]);
             $visible     = true;
             foreach ($barcodeChar as $c) {
                 /* visible, width, top, length */
-                $width          = $c ? $this->barThickWidth : $this->barThinWidth;
+                $width          = $c ? $this->_barThickWidth : $this->_barThinWidth;
                 $barcodeTable[] = array((int) $visible, $width, 0, 1);
                 $visible = ! $visible;
             }
-            $barcodeTable[] = array(0 , $this->barThinWidth);
+            $barcodeTable[] = array(0 , $this->_barThinWidth);
         }
         return $barcodeTable;
     }
@@ -154,9 +176,9 @@ class Code39 extends AbstractObject
      */
     public function getChecksum($text)
     {
-        $this->checkText($text);
+        $this->_checkText($text);
         $text     = str_split($text);
-        $charset  = array_flip(array_keys($this->codingMap));
+        $charset  = array_flip(array_keys($this->_codingMap));
         $checksum = 0;
         foreach ($text as $character) {
             $checksum += $charset[$character];
