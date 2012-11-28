@@ -110,21 +110,23 @@ class UserController extends Zend_Controller_Action
 
 		 $userMapper = new Application_Model_UserMapper();
 		 $user = new Application_Model_User();
+		 $pwd = $request->getParam('password');
 
-		 if($request->getParam('password') !== NULL)
+		 if(is_null($pwd))
 		 {
-		 $user->setId($request->getParam('id'))
-		 ->setPassword(md5($request->getParam('password')))
-		 ->setUsername($request->getParam('username'))
-		 ->setFirstname($request->getParam('firstname'))
-		 ->setLastname($request->getParam('lastname'));
+		 	$user->setId($request->getParam('id'))
+		 	->setPassword(md5($pwd))
+		 	->setUsername($request->getParam('username'))
+		 	->setFirstname($request->getParam('firstname'))
+		 	->setLastname($request->getParam('lastname'));
 
-		 $userMapper->save($user);
-		 $this->view->assign('description',$translate->translate("editing_error"));
-		 }else{
+		 	$userMapper->save($user);
 		 	$this->view->assign('description',$translate->translate("editing_success"));
+		 }else{
+		 	$this->view->assign('description',$translate->translate("editing_error"));
+		 	$this->_redirect('/user/editprofile');
 		 }
-		 
+		 	
 		} catch (Exception $e) {
 			echo 'Caught exception: ',  $e->getMessage(), "\n";
 		}
@@ -205,8 +207,8 @@ class UserController extends Zend_Controller_Action
 
 		$authAdapter->setIdentity($uname);
 		$authAdapter->setCredential(md5($paswd));
-		
-		
+
+
 		print_r($authAdapter);
 		try{
 			// Perform the authentication query, saving the result
@@ -215,6 +217,7 @@ class UserController extends Zend_Controller_Action
 		}catch (Zend_Auth_Adapter_Exception $authE) {echo "Error during authentication: ".$authE;}
 		if($result->isValid()){
 			// Go!
+			//TODO Session!
 			$data = $authAdapter->getResultRowObject(null,'password');
 			$auth->getStorage()->write($data);
 			$this->_redirect('/user/userpage');
