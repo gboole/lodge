@@ -1,12 +1,9 @@
 <?xml version="1.0"?>
 <configdata>
   <app>
-    <webhost>localhost</webhost>
-	<database>
-	  <host>127.0.0.1</host>
-	  <username>root</username>
-	  <password>laz110xx</password>
-	  <dbname>looup</dbname>
-	</database>
+    <title>LOdGE</title>
+	<description>Localization, Group and Events</description>
+	<version>0.0.1</version>
+	<state>Prototype</state>
   </app>
 </configdata>

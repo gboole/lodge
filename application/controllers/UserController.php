@@ -8,10 +8,13 @@ require_once 'Zend/Session/Namespace.php';
 class UserController extends Zend_Controller_Action
 {
 
+	/**
+	 * Base redirect
+	 */
 	public function indexAction()
 	{
 		$request = $this->getRequest();
-		$auth		= Zend_Auth::getInstance();
+		$auth = Zend_Auth::getInstance();
 
 
 		if(!$auth->hasIdentity()){
@@ -21,23 +24,20 @@ class UserController extends Zend_Controller_Action
 		}
 	}
 
+	/**
+	 * Create new user - setting up the form
+	 */
 	public function registerAction()
 	{
-
-		$request = $this->getRequest();
-
 		$this->view->assign('action',"process");
-		$this->view->assign('title','Member Registration');
-		$this->view->assign('label_uname','Username');
-		$this->view->assign('label_fname','First Name');
-		$this->view->assign('label_lname','Last Name');
-		$this->view->assign('label_pass','Password');
-		$this->view->assign('label_submit','Register');
-		$this->view->assign('description','Please enter this form completely:');
 	}
 
+	/**
+	 * Create new user - create action
+	 */
 	public function processAction()
 	{
+		$translate = Zend_Registry::get('Zend_Translate');
 		try{
 			$request = $this->getRequest();
 
@@ -47,19 +47,18 @@ class UserController extends Zend_Controller_Action
 			$userMapper->findByUsername($request->getParam('username'), $user);
 
 			if ($user->id) {
-				$this->view->assign('description','Utente già presente');
+				$this->view->assign('description',$translate->translate("username_already_exists"));
 			}else{
 					
-				$user->setPassword($request->getParam('password'))
+				$user->setPassword(md5($request->getParam('password')))
 				->setUsername($request->getParam('username'))
 				->setFirstname($request->getParam('firstname'))
 				->setLastname($request->getParam('lastname'));
 				$userMapper->save($user);
-				$this->view->assign('description','Registration succes');
+				$this->view->assign('description',$translate->translate("registration_success"));
 			}
 
 		}catch (Exception $e) {echo $e;}
-		$this->view->assign('title','Registration Process');
 
 
 	}
@@ -72,15 +71,15 @@ class UserController extends Zend_Controller_Action
 
 		}catch (Excetpion $e){echo $e;}
 
-		$this->view->assign('title','Member List');
-		$this->view->assign('description','Below, our members:');
 		$this->view->assign('datas',$this->view->result);
 
 	}
 
 
 
-
+	/**
+	 * Edit user profile
+	 */
 	public function editAction()
 	{
 		try{
@@ -92,66 +91,75 @@ class UserController extends Zend_Controller_Action
 		 $result = new Application_Model_User();
 		 $user->find($id, $result);
 
-
 		 $this->view->assign('data',$result);
 		 $this->view->assign('action', $request->getBaseURL()."/user/processedit");
-		 $this->view->assign('title','Member Editing');
-		 $this->view->assign('label_uname','Username');
-		 $this->view->assign('label_fname','First Name');
-		 $this->view->assign('label_lname','Last Name');
-		 $this->view->assign('label_pass','Password');
-		 $this->view->assign('label_submit','Edit');
-		 $this->view->assign('description','Please update this form completely:');
 		} catch (Exception $e) {
 			echo 'Caught exception: ',  $e->getMessage(), "\n";
 		}
 	}
 
 
+	/**
+	 * Edit profile - process the data
+	 */
 	public function processeditAction()
 	{
 		try{
+		 $translate = Zend_Registry::get('Zend_Translate');
 		 $request = $this->getRequest();
 
 		 $userMapper = new Application_Model_UserMapper();
 		 $user = new Application_Model_User();
 
+		 if($request->getParam('password') !== NULL)
+		 {
 		 $user->setId($request->getParam('id'))
-		 ->setPassword($request->getParam('password'))
+		 ->setPassword(md5($request->getParam('password')))
 		 ->setUsername($request->getParam('username'))
 		 ->setFirstname($request->getParam('firstname'))
 		 ->setLastname($request->getParam('lastname'));
 
 		 $userMapper->save($user);
-
-		 $this->view->assign('title','Editing Process');
-		 $this->view->assign('description','Editing succes');
+		 $this->view->assign('description',$translate->translate("editing_error"));
+		 }else{
+		 	$this->view->assign('description',$translate->translate("editing_success"));
+		 }
+		 
 		} catch (Exception $e) {
 			echo 'Caught exception: ',  $e->getMessage(), "\n";
 		}
 
 	}
 
+	/**
+	 * User deletion function, get from request the id
+	 * TODO: get from auth/session
+	 */
 	public function delAction()
 	{
-
+		$translate = Zend_Registry::get('Zend_Translate');
 		$userMapper = new Application_Model_UserMapper();
 		$user = new Application_Model_User();
 
 		$request = $this->getRequest();
 		$userMapper->deleteById($request->getParam('id'));
 
-		$this->view->assign('title','Delete Data');
-		$this->view->assign('description','Deleting succes');
+		//TODO Show the result
+		$this->view->assign('description',$translate->translate("deleting_success"));
 		$this->view->assign('list',$request->getBaseURL()."/user/list");
 
 
 	}
 
+	/**
+	 * Login
+	 */
 	public function loginformAction()
 	{
 
-		$ns = new Zend_Session_Namespace('HelloWorld');
+		$translate = Zend_Registry::get('Zend_Translate');
+
+		$ns = new Zend_Session_Namespace('LodgeNS');
 
 		if(!isset($ns->yourLoginRequest)){
 			$ns->yourLoginRequest = 1;
@@ -159,45 +167,59 @@ class UserController extends Zend_Controller_Action
 			$ns->yourLoginRequest++;
 		}
 
-		$ns->setExpirationSeconds(60);
+		//TODO Get from configuration
+		$ns->setExpirationSeconds(300);
 
 		$request = $this->getRequest();
 		$this->view->assign('request', $ns->yourLoginRequest);
 		$this->view->assign('action', $request->getBaseURL()."/user/auth");
-		$this->view->assign('title', 'Login Form');
-		$this->view->assign('username', 'User Name');
-		$this->view->assign('password', 'Password');
 
 	}
 
+	/**
+	 * Function for the authentication of the User -- to move to AuthController
+	 */
 	public function authAction(){
+
+		// Get connection with UserMapper
+		$userMapper = new Application_Model_UserMapper();
+			
+		$request 	= $this->getRequest();
+
 		try{
-
-			$request 	= $this->getRequest();
-			$registry 	= Zend_Registry::getInstance();
 			$auth		= Zend_Auth::getInstance();
+			$dbAdapter = Zend_Db_Table::getDefaultAdapter();
 
-			$DB = $registry['DB'];
-
-			$authAdapter = new Zend_Auth_Adapter_DbTable($DB);
-			$authAdapter->setTableName('L_USERS')
+			// New Auth Adapter
+			$authAdapter = new Zend_Auth_Adapter_DbTable($dbAdapter);
+			$authAdapter->setTableName($userMapper->getDbTable()->getTableName())
 			->setIdentityColumn('username')
 			->setCredentialColumn('password');
+		}catch(Exception $e){
+			echo $e;
+		}
 
-			// Set the input credential values
-			$uname = $request->getParam('username');
-			$paswd = $request->getParam('password');
-			$authAdapter->setIdentity($uname);
-			$authAdapter->setCredential(md5($paswd));
+		// Set the input credential values
+		$uname = $request->getParam('username');
+		$paswd = $request->getParam('password');
 
+		$authAdapter->setIdentity($uname);
+		$authAdapter->setCredential(md5($paswd));
+		
+		
+		print_r($authAdapter);
+		try{
 			// Perform the authentication query, saving the result
 			$result = $auth->authenticate($authAdapter);
-		}catch (Exception $e) {echo $e;}
+
+		}catch (Zend_Auth_Adapter_Exception $authE) {echo "Error during authentication: ".$authE;}
 		if($result->isValid()){
+			// Go!
 			$data = $authAdapter->getResultRowObject(null,'password');
 			$auth->getStorage()->write($data);
 			$this->_redirect('/user/userpage');
 		}else{
+			// Retry
 			$this->_redirect('/user/loginform');
 		}
 	}
@@ -205,6 +227,8 @@ class UserController extends Zend_Controller_Action
 
 	public function userpageAction(){
 		$auth		= Zend_Auth::getInstance();
+		$translate = Zend_Registry::get('Zend_Translate');
+
 
 		if(!$auth->hasIdentity()){
 	  $this->_redirect('/user/loginform');
@@ -229,7 +253,6 @@ class UserController extends Zend_Controller_Action
 			
 		$this->view->assign('request', $ns->yourLoginRequest);
 
-		$this->view->assign('username', $username);
 		$this->view->assign('firstname', $firstname);
 		$this->view->assign('id', $id);
 		$this->view->assign('urllogout',$logoutUrl);
@@ -272,13 +295,6 @@ class UserController extends Zend_Controller_Action
 
 		 $this->view->assign('data',$result);
 		 $this->view->assign('action', $request->getBaseURL()."/user/processedit");
-		 $this->view->assign('title','Member Editing');
-		 $this->view->assign('label_uname','Username');
-		 $this->view->assign('label_fname','First Name');
-		 $this->view->assign('label_lname','Last Name');
-		 $this->view->assign('label_pass','Password');
-		 $this->view->assign('label_submit','Edit');
-		 $this->view->assign('description','Please update this form completely:');
 		} catch (Exception $e) {
 			echo 'Caught exception: ',  $e->getMessage(), "\n";
 		}

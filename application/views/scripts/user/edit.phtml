@@ -1,6 +1,6 @@
-  <h1><?php echo $this->escape($this->title);?></h1>
+  <h1><?php echo $this->translate("user_edit_form"); ?></h1>
   <div id="description">
-    <?php echo $this->escape($this->description);?>
+    <?php echo $this->translate("enter_form_completely"); ?>
   </div>
 
   <form name="edit" method="post" action="<?php echo $this->escape($this->action)?>">
@@ -8,23 +8,23 @@
   <input type="hidden" name="id" value="<?php echo $this->data->id?>">
   <table>
     <tr>
-	  <td><?php echo $this->escape($this->label_uname)?></td>
-	  <td><input type="text" name="username" value="<?php echo $this->data->username?>"></td>
+	  <td><?php echo $this->translate("username"); ?></td>
+	  <td><input type="text" name="username" value="<?php echo $this->data->username?>" readonly="readonly"></td>
 	</tr>
     <tr>
-	  <td><?php echo$this->escape($this->label_pass)?></td>
-	  <td><input type="password" name="password" value="<?php echo $this->data->password?>"></td>
+	  <td><?php echo $this->translate("password"); ?></td>
+	  <td><input type="password" name="password" value=""></td>
 	</tr>	
 	<tr>
-	  <td><?php echo $this->escape($this->label_fname)?></td>
+	  <td><?php echo $this->translate("first_name"); ?></td>
 	  <td><input type="text" name="firstname" value="<?php echo $this->data->firstname?>"></td>
 	</tr>	
 	<tr>
-	  <td><?php echo $this->escape($this->label_lname)?></td>
+	  <td><?php echo $this->translate("last_name"); ?></td>
 	  <td><input type="text" name="lastname" value="<?php echo $this->data->lastname?>"></td>
 	</tr>	
   </table>
-  <input type="submit" name="submit" value="<?php echo $this->escape($this->label_submit);?>">
+  <input type="submit" name="submit" value="<?php echo $this->translate("save"); ?>">
   
         
   </form>

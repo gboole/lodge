@@ -1,13 +1,13 @@
-  <h1><?php echo $this->escape($this->title);?></h1>
-  <h2><?php echo $this->escape($this->description);?></h2>
-  <a href="register">Register</a>
+  <h1><?php echo $this->translate("member_list"); ?></h1>
+  <h2><?php echo $this->translate("user_list_ds"); ?></h2>
+  <a href="register"><?php echo $this->translate("register"); ?></a>
    
   <table border="1">
     <tr>
-	  <th>ID</th>
-	  <th>Username</th>	  
-	  <th>First Name</th>	
-	  <th>Last Name</th>	  
+	  <th><?php echo $this->translate("id"); ?></th>
+	  <th><?php echo $this->translate("username"); ?></th>	  
+	  <th><?php echo $this->translate("first_name"); ?></th>	
+	  <th><?php echo $this->translate("last_name"); ?></th>	  
 	</tr>
  
   <?php foreach ($this->datas as $entry): ?>
@@ -17,9 +17,9 @@
 	  <td><?php echo $this->escape($entry->firstname)?></td>	  
 	  <td><?php echo $this->escape($entry->lastname)?></td>
 	  <td>
-	    <a href="edit/id/<?php echo $this->escape($entry->id)?>">Edit</a>
+	    <a href="edit/id/<?php echo $this->escape($entry->id)?>"><?php echo $this->translate("edit"); ?></a>
 		|
-	    <a href="del/id/<?php echo $this->escape($entry->id)?>">Delete</a>		
+	    <a href="del/id/<?php echo $this->escape($entry->id)?>"><?php echo $this->translate("delete"); ?></a>		
 	  </td>	  
 	</tr> 
 	

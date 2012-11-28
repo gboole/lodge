@@ -1,25 +1,23 @@
-  <h1><?php echo $this->escape($this->title);?></h1>
-  <div id="description">
-    <?php echo $this->escape($this->description);?>
-  </div>
+  <h1><?php echo $this->translate("new_member_title"); ?></h1>
+  
   <form name="register" method="post" action="<?php echo $this->escape($this->action)?>">
   <table>
     <tr>
-	  <td><?php echo $this->escape($this->label_uname)?></td>
+	  <td><?php echo $this->translate("username"); ?></td>
 	  <td><input type="text" name="username"></td>
 	</tr>
     <tr>
-	  <td><?php echo $this->escape($this->label_fname)?></td>
+	  <td><?php echo $this->translate("first_name"); ?></td>
 	  <td><input type="text" name=firstname></td>
 	</tr>	
 	 <tr>
-	  <td><?php echo $this->escape($this->label_lname)?></td>
+	  <td><?php echo $this->translate("last_name"); ?></td>
 	  <td><input type="text" name="lastname"></td>
 	</tr>
     <tr>
-	  <td><?php echo $this->escape($this->label_pass)?></td>
+	  <td><?php echo $this->translate("password"); ?></td>
 	  <td><input type="password" name="password"></td>
 	</tr>	
   </table>
-  <input type="submit" name="submit" value="<?php echo $this->escape($this->label_submit);?>">
+  <input type="submit" name="submit" value="<?php echo $this->translate("save"); ?>">
   </form>
