@@ -126,7 +126,7 @@ class UserController extends Zend_Controller_Action
 		 	$this->view->assign('description',$translate->translate("editing_error"));
 		 	$this->_redirect('/user/editprofile');
 		 }
-		 	
+
 		} catch (Exception $e) {
 			echo 'Caught exception: ',  $e->getMessage(), "\n";
 		}
@@ -158,24 +158,15 @@ class UserController extends Zend_Controller_Action
 	 */
 	public function loginformAction()
 	{
-
-		$translate = Zend_Registry::get('Zend_Translate');
-
-		$ns = new Zend_Session_Namespace('LodgeNS');
-
-		if(!isset($ns->yourLoginRequest)){
-			$ns->yourLoginRequest = 1;
-		}else{
-			$ns->yourLoginRequest++;
-		}
-
-		//TODO Get from configuration
-		$ns->setExpirationSeconds(300);
+		$this->view->pageTitle = "Login form";
+		$this->view->bodyCopy = "<p>Please fill out this form.</p>";
+		$form = new Application_Form_LoginForm();
 
 		$request = $this->getRequest();
-		$this->view->assign('request', $ns->yourLoginRequest);
-		$this->view->assign('action', $request->getBaseURL()."/user/auth");
-
+		$form->setAction($request->getBaseURL().'/user/auth')
+		->setMethod('post');
+		
+		$this->view->form = $form;
 	}
 
 	/**
@@ -246,7 +237,7 @@ class UserController extends Zend_Controller_Action
 		$logoutUrl  = $request->getBaseURL().'/user/logout';
 		$editProfileUrl  = $request->getBaseURL().'/user/editprofile';
 
-		$ns = new Zend_Session_Namespace('HelloWorld');
+		$ns = new Zend_Session_Namespace('looup');
 			
 		if(!isset($ns->yourLoginRequest)){
 			$ns->yourLoginRequest = 1;
@@ -271,7 +262,7 @@ class UserController extends Zend_Controller_Action
 
 	public function statsAction()
 	{
-		$ns = new Zend_Session_Namespace('HelloWorld');
+		$ns = new Zend_Session_Namespace('Looup');
 		foreach ($ns as $index => $value) {
 			echo "ns->$index = '$value';";
 			echo "<br />";
@@ -302,6 +293,8 @@ class UserController extends Zend_Controller_Action
 			echo 'Caught exception: ',  $e->getMessage(), "\n";
 		}
 	}
+
+
 
 
 }

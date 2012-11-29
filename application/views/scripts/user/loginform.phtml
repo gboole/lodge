@@ -1,15 +1,2 @@
-  <h1><?php echo $this->translate("login_form"); ?></h1>
-  <?php echo $this->translate("visit_count")." ".$this->escape($this->request)." ".$this->translate("time_s")."." ?>
-  <form method='post' action='<?php echo $this->escape($this->action);?>'>
-  <table>
-    <tr>
-	  <td><?php echo $this->translate("username"); ?></td>
-	  <td><input type='text' name='username'></td>
-	</tr>
-    <tr>
-	  <td><?php echo $this->translate("password"); ?></td>
-	  <td><input type='password' name='password'></td>
-	</tr>	
-  </table>
-  <input type='submit' name='login' value='Login'>
-  </form>
+<h1><?php echo $this->translate("login_form"); ?></h1>
+<?php echo $this->form ;?>
