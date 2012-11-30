@@ -1,0 +1,168 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<sim-project version="5.96" multi-file="no">
+  <meta>
+    <name>LOdGE</name>
+    <authors> George Boole</authors>
+    <description>Localization, Group and Events</description>
+  </meta>
+  <management>
+    <persons>
+      <person id="Pd33913f7d7a449f79bd1ebebcac06774">
+        <first-name />
+        <last-name />
+        <role />
+        <e-mail />
+        <phone-number />
+        <description />
+        <color>#00000000</color>
+      </person>
+    </persons>
+    <tasks />
+    <requirements />
+    <issues />
+    <to-dos />
+  </management>
+  <glossary />
+  <types>
+    <type-sets>
+      <type-set file="UmlTypes.xml" />
+    </type-sets>
+    <custom-types />
+  </types>
+  <filters />
+  <items />
+  <models>
+    <model id="p770623839164631967" name="Model 1" type="model" namespace="" order-index="1">
+      <meta>
+        <authors>
+          <author />
+        </authors>
+        <description />
+        <creation-date>11/30/2012 10:11:05</creation-date>
+        <change-date>01/01/0001 00:00:00</change-date>
+        <revision-count>0</revision-count>
+        <version />
+      </meta>
+      <tagged-values />
+      <abstract-items />
+      <sub-models />
+      <diagram type="entity-relationship" id="p816354655546153425" name="EntityRelationshipDiagram1" order-index="1" show-nullability="false">
+        <style>
+          <background-color index="1" color="#FFFFFFFF" />
+          <background-color index="2" color="#FFFFFFFF" />
+          <background-type type="solid" />
+        </style>
+        <meta>
+          <authors>
+            <author />
+          </authors>
+          <description />
+          <creation-date>11/30/2012 10:11:05</creation-date>
+          <change-date>11/30/2012 10:47:28</change-date>
+          <revision-count>0</revision-count>
+          <version />
+        </meta>
+        <tagged-values />
+        <abstract-items>
+          <item id="ddip816354655546153425_212561113532955817" cid="ENT004" type="erd-entity" name="L_USERS" style-class="default" is-abstract="false" is-root="false" is-leaf="false" is-active="false" creator="Pd33913f7d7a449f79bd1ebebcac06774" creation-date="11/30/2012 10:14:57">
+            <stereotypes />
+            <tagged-values />
+            <documentation>
+              <text>
+                <content>
+                  <paragraph line-spacing="1">
+                    <p index="0">
+                      <t />
+                      <style font-name="Liberation Sans" font-size="12" font-bold="false" font-italic="false" font-underline="false" font-strikeout="false">
+                        <text>
+                          <solid-brush color="#FF000000" />
+                        </text>
+                      </style>
+                    </p>
+                  </paragraph>
+                </content>
+              </text>
+            </documentation>
+            <cooperation>
+              <participants />
+              <comments />
+            </cooperation>
+            <associated-diagrams />
+            <owned-items />
+            <style class="default" />
+            <attributes>
+              <attribute uid="abe677972b8cb4f669bfd1ed733f11624964" name="id_user" type="INT" type-size="10" foreign-key="false" primary-key="true" nullable="false" description="" default-value="" />
+              <attribute uid="a2cc6ce288252472eac53c06df6289139964" name="username_user" type="VARCHAR" type-size="50" foreign-key="false" primary-key="false" nullable="false" description="" default-value="" />
+              <attribute uid="a6090123a757d4b9db65886ee46d8be71964" name="password_user" type="VARCHAR" type-size="255" foreign-key="false" primary-key="false" nullable="false" description="" default-value="" />
+              <attribute uid="aa14f469320254eaa8b76938d50cbf3fe964" name="firstname_user" type="VARCHAR" type-size="50" foreign-key="false" primary-key="false" nullable="false" description="" default-value="" />
+              <attribute uid="a242b236aef714c01a45c4c15bea0ce6a964" name="lastname_user" type="VARCHAR" type-size="50" foreign-key="false" primary-key="false" nullable="false" description="" default-value="" />
+              <attribute uid="aee2a9aeca82349d2a6bb97f4f43ffc1d964" name="email_user" type="VARCHAR" type-size="250" foreign-key="false" primary-key="false" nullable="false" description="" default-value="" />
+            </attributes>
+          </item>
+          <item id="ddip816354655546153425_129542495853781561" cid="ENT001" type="erd-entity" name="L_USER_DATAS" style-class="" is-abstract="false" is-root="false" is-leaf="false" is-active="false" creator="Pd33913f7d7a449f79bd1ebebcac06774" creation-date="11/30/2012 10:43:31">
+            <stereotypes />
+            <tagged-values />
+            <documentation>
+              <text>
+                <content>
+                  <paragraph line-spacing="1">
+                    <p index="0">
+                      <t />
+                      <style font-name="Liberation Sans" font-size="12" font-bold="false" font-italic="false" font-underline="false" font-strikeout="false">
+                        <text>
+                          <solid-brush color="#FF000000" />
+                        </text>
+                      </style>
+                    </p>
+                  </paragraph>
+                </content>
+              </text>
+            </documentation>
+            <cooperation>
+              <participants />
+              <comments />
+            </cooperation>
+            <associated-diagrams />
+            <owned-items />
+            <style class="default" />
+            <attributes>
+              <attribute uid="ab87e31aa82bd40fc991a31ab27b661ac309" name="id_user_data" type="INT" type-size="10" foreign-key="false" primary-key="true" nullable="false" description="User Data Id" default-value="" />
+              <attribute uid="adc3bcb34a1214e249ab33f46a4a0ee25309" name="id_user" type="INT" type-size="10" foreign-key="true" primary-key="false" nullable="false" description="" default-value="" />
+              <attribute uid="a03d1fe344037473a9947dbc3bd2e0862309" name="cd_user_data" type="varchar" type-size="20" foreign-key="false" primary-key="false" nullable="false" description="" default-value="" />
+              <attribute uid="a741ca49ea903479cacfdf663a0803bd2309" name="ds_user_data" type="varchar" type-size="20" foreign-key="false" primary-key="false" nullable="false" description="" default-value="" />
+            </attributes>
+          </item>
+          <item id="ddip816354655546153425_839871525998326214" cid="REL001" type="erd-relationship" name="" style-class="" is-abstract="false" is-root="false" is-leaf="false" is-active="false" creator="Pd33913f7d7a449f79bd1ebebcac06774" creation-date="11/30/2012 10:47:28">
+            <stereotypes />
+            <tagged-values />
+            <associated-diagrams />
+            <owned-items />
+            <style class="default" />
+            <erd-relation type="Association" multiplicity-from="1" multiplicity-to="0..*" from-attribute="abe677972b8cb4f669bfd1ed733f11624964" to-attribute="ad7e2a3ca562841528b282046d756ea19254" />
+          </item>
+        </abstract-items>
+        <layer name="Default" visible="true" enabled="true" locked="false">
+          <item id="ddip816354655546153425_212561113532955817" iid="6cdd3061931045379a3febcf151002c8" show-cid="false" show-parent-name="false" show-stereotypes="true" show-tagged-values="false" creation-date="11/30/2012 10:14:57" order-index="0" type="entity">
+            <layout ax="54" ay="177" awidth="311" aheight="143" x="54" y="177" width="311" height="143" angle="0" />
+            <erd-entity />
+          </item>
+          <item id="ddip816354655546153425_129542495853781561" iid="9db3c326ad79437db1292e4c0021f9e0" show-cid="false" show-parent-name="false" show-stereotypes="true" show-tagged-values="false" creation-date="11/30/2012 10:43:31" order-index="1" type="entity">
+            <layout ax="524" ay="114" awidth="323" aheight="123" x="524" y="114" width="323" height="123" angle="0" />
+            <erd-entity />
+          </item>
+          <item id="ddip816354655546153425_839871525998326214" iid="b2866127e3ac410685559420069a07f7" show-cid="false" show-parent-name="false" show-stereotypes="true" show-tagged-values="false" creation-date="11/30/2012 10:47:28" order-index="2" type="relation">
+            <layout line-style="oblique" lock-start-point="false" lock-end-point="false" name-position="10,-10" x1="365" y1="225" x2="524" y2="201" start-border-pos="0.333137458854622" end-border-pos="0.925821536924781">
+              <points>
+                <point x="365" y="225" />
+                <point x="524" y="201" />
+              </points>
+            </layout>
+            <relation from="ddip816354655546153425_212561113532955817" from-iid="6cdd3061931045379a3febcf151002c8" to="ddip816354655546153425_129542495853781561" to-iid="9db3c326ad79437db1292e4c0021f9e0" />
+          </item>
+        </layer>
+      </diagram>
+    </model>
+  </models>
+  <documents />
+  <document-templates />
+</sim-project>
